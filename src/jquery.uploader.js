@@ -136,7 +136,7 @@
         proto.constructor = Class;
         //子类调用父类方法的接口
         proto.__super = function(fnName, args){
-            parent[fnName].apply(this, args);
+            return fnName ? parent[fnName].apply(this, args) : parent;
         };
 
         Class.prototype = proto;
