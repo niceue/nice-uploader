@@ -133,12 +133,13 @@
         Class = function() {
             if ( arguments[0]!=='!-' && init ) init.apply(this, arguments);
         };
-        Class.prototype = proto;
-        Class.prototype.constructor = Class;
+        proto.constructor = Class;
         //子类调用父类方法的接口
-        Class.prototype.__super = function(fnName, args){
+        proto.__super = function(fnName, args){
             parent[fnName].apply(this, args);
         };
+
+        Class.prototype = proto;
         Class.extend = arguments.callee;
         
         return Class;
