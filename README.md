@@ -1,5 +1,5 @@
 ## Uploader
-Multiple file upload plugin with progress-bar.
+Multiple file upload jQuery plugin with progress-bar, using html5 and flash technology.
 
 
 ### Usage
