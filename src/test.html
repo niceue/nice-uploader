@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>jQuery Uploader</title>
+<style type="text/css">
+* {margin:0; padding:0;}
+body {font:12px/1.5 tohama,arial;}
+a {text-decoration:none}
+a:hover {text-decoration:underline;}
+/*.upload-btn-over {background:#f00}*/
+</style>
+<link rel="stylesheet" href="../jquery.uploader.css">
+</head>
+
+<body>
+    <br><a href="javascript:uploader_0.start();">开始上传</a> &nbsp;&nbsp; <a href="javascript:uploader_0.cancel('*');">清空队列</a>
+	<br><br>
+	<button type="button" id="uploader">选择文件</button>
+    <div id="queue" style="width:600px"></div>
+	
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="jquery.uploader.js"></script>
+<script type="text/javascript">
+function log(obj){
+    if ('console' in window) {
+        console.log(obj);
+    }
+}
+$(function(){
+   $('#uploader').uploader({
+        action: 'upload.php',
+        //mode: 'flash',
+        multi: true,
+        auto: false,
+        showQueue: '#queue',
+        fileSizeLimit: '200k',
+        fileTypeDesc: '选择图片|选择压缩文件',
+        fileTypeExts: 'jpg,gif,png|zip,rar',
+        /*onMouseClick: function(){
+            //log('onMouseClick')
+        },
+        onMouseOver: function(el){
+            //log('onMouseOver')
+        },
+        onMouseOut: function(el){
+            //log('onMouseOut')
+        },
+        onInit:function(self){
+            log('onInit')
+        },*/
+        onSelected: function(e){
+            //log(e)
+        },
+        onClearQueue: function(){
+            log('onClearQueue')
+        },
+        onStart: function(e){
+            log('onStart')
+        },
+        onProgress: function(e, file){
+            log('onProgress')
+            log(arguments)
+        },
+        onComplete: function(e){
+            log('onComplete')
+        },
+        onAllComplete: function(e){
+            log('onAllComplete')
+        },
+        onError: function(e, file){
+            log('onError')
+            log(arguments)
+        },
+        onSuccess: function(e, file, data){
+            log('onSuccess')
+            log(arguments)
+        },
+        onCancel: function(file){
+            log('onCancel')
+            log(file)
+        },
+        onClearQueue: function(){
+            log('onClearQueue')
+        }
+    }); 
+});
+</script>
+</body>
+</html>
