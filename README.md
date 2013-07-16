@@ -1,16 +1,29 @@
-### Uploader
+## Uploader
 Multiple file upload plugin with progress-bar.
 
 
 ### Usage
-1. Include resources:
+Include resources:
 ``` html
-    <link rel="stylesheet" href="path/to/jquery.uploader.css">
-    <script type="text/javascript" src="path/to/jquery.uploader.js"></script>
+<link rel="stylesheet" href="path/to/jquery.uploader.css">
+<script type="text/javascript" src="path/to/jquery.uploader.js"></script>
 ```
 
-That's all!
+Initialization：
+``` js
+$(element).uploader({
+    action: 'upload.php',
+    onSuccess: function(){
+        //do something..
+    }
+});
+```
 
+### Documention
+[简体中文](http://niceue.com/uploader/)
+
+### Dependencies
+[jQuery 1.7+](http://jquery.com)
 
 ### Browser Support
   * IE6+
