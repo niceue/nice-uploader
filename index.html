@@ -79,6 +79,7 @@ $(function(){
         onProgress: function(e){
             log('onProgress')
             log(e)
+            log('上传速度：'+ this.speed)
             log("==========================");
         },
         onError: function(e){
@@ -88,6 +89,7 @@ $(function(){
         },
         onSuccess: function(e){
             log('onSuccess');
+            log('文件地址：'+ e.data);
             log(e);
             if (e.file.type === "image/jpeg") previewHTML += '<img src="'+ e.data +'">';
             log("==========================");
