@@ -83,8 +83,8 @@
     "audio/mpeg,mpga mpega mp2 mp3,"+
     "audio/x-wav,wav,"+
     "audio/mp4,m4a,"+
-    "audio/ogg,oga"+
-    "audio/webm,webma"+
+    "audio/ogg,oga,"+
+    "audio/webm,webma,"+
     "video/mpeg,mpeg mpg mpe,"+
     "video/quicktime,qt mov,"+
     "video/mp4,mp4,"+
@@ -168,7 +168,9 @@
             this.id = id;
             this.name = f.name;
             this.size = f.size;
-            this.type = f.type.length < 6 ? mimes[f.type] : f.type; //文件后缀最长5字符
+            this.type = !f.type ? mimes[ f.name.split('.').pop() ] :
+                        f.type.length < 6 ? mimes[f.type] :
+                        f.type; //文件后缀最长5字符
             this.lastModifiedDate = +f.lastModifiedDate;
             if (f.error) this.error = f.error;
         }
