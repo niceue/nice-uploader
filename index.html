@@ -17,17 +17,19 @@ a:hover {text-decoration:underline;}
     <h2>建议打开控制台查看上传过程</h2>
 
     <div id="preview"></div>
-    <br><a href="javascript:uploader_0.start();">开始上传</a> &nbsp;&nbsp; <a href="javascript:uploader_0.cancel('*');">清空队列</a>
-	<br><br>
+    <br>
+	<span style="color:red">注意：本示例限制了只能上传jpg,gif,png|zip,rar格式，并且大小不超过200kb</span>
+    <br><br>
     
-	<button type="button" id="uploader">选择文件</button>
+	<button type="button" id="uploader">选择文件</button> 
+    <a href="javascript:uploader_0.start();" style="margin-left:20px;">开始上传</a> &nbsp;&nbsp; <a href="javascript:uploader_0.cancel('*');">清空队列</a>
     <div id="queue" style="width:600px"></div>
     <br><br>
 
 
 <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.2.min.js"></script>
 <!--script type="text/javascript" src="../static/js/jquery/jquery-1.7.2.min.js"></script-->
-<script type="text/javascript" src="jquery.uploader.js"></script>
+<script type="text/javascript" src="src/jquery.uploader.js"></script>
 <script type="text/javascript">
 function log(obj){
     if ('console' in window) {
@@ -87,7 +89,7 @@ $(function(){
         onSuccess: function(e){
             log('onSuccess');
             log(e);
-            previewHTML += '<img src="'+ e.data +'">';
+            if (e.file.type === "image/jpeg") previewHTML += '<img src="'+ e.data +'">';
             log("==========================");
         },
         onComplete: function(e){
@@ -97,8 +99,10 @@ $(function(){
         },
         onAllComplete: function(){
             log('onAllComplete');
-            $('#preview').append(previewHTML);
-            previewHTML = '';
+            if ( previewHTML ) {
+                $('#preview').append(previewHTML);
+                previewHTML = '';
+            }
             log("==========================");
         },
         onClearQueue: function(){
