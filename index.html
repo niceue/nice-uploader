@@ -36,7 +36,8 @@ function log(obj){
 }
 $(function(){
     var previewHTML = '';
-   $('#uploader').uploader({
+    
+    $('#uploader').uploader({
         action: 'upload.php',
         //mode: 'flash',
         multi: true,
@@ -54,18 +55,19 @@ $(function(){
         onMouseOut: function(el){
             //log('onMouseOut')
         },*/
-        onInit:function(self){
+        onInit:function(){
             log('onInit');
             log("==========================");
         },
-        onSelected: function(e){
+        onSelected: function(filelist){
             log(' ');
             log('onSelected');
-            log(e);
+            log(filelist);
             log("==========================");
         },
-        onClearQueue: function(){
-            log('onClearQueue');
+        onCancel: function(file){
+            log('onCancel');
+            log(file);
             log("==========================");
         },
         onStart: function(e){
@@ -97,11 +99,6 @@ $(function(){
             log('onAllComplete');
             $('#preview').append(previewHTML);
             previewHTML = '';
-            log("==========================");
-        },
-        onCancel: function(e){
-            log('onCancel');
-            log(e);
             log("==========================");
         },
         onClearQueue: function(){
