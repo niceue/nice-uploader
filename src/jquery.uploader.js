@@ -339,7 +339,7 @@
                 if (self.$queuePanel) {
                     self.$queuePanel.html( queueHTML );
                 }
-                if ( opt.auto && opt.onSelected.call(this, self.queue) !== false ) self.start();
+                if ( opt.onSelected.call(this, self.queue) !== false && opt.auto ) self.start();
             },
             
             onStart: function(e){
