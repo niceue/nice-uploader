@@ -774,7 +774,7 @@
             bytes = bytes / 1024;
             i++;
         }
-        return Math.max(bytes, 0.1).toFixed(1) + ['kB', 'MB', 'GB'][i];
+        return Math.max(bytes, 0.1).toFixed(1) + ['KB', 'M', 'G', 'T'][i];
     }
     
     /**
