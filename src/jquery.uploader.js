@@ -569,9 +569,12 @@
      * @extend Uploader
      */
     defaults.swf = (function(){
-        var src = $('script[src*="uploader."]').attr('src');
+        var src = $('script[src*="uploader."]').attr('src'),
+            path;
         if (src === undefined) src = '';
-        return src.split('/').slice(0, -1).join('/') + 'uploader.swf';
+        path = src.split('/').slice(0, -1).join('/');
+        if (path) path += '/';
+        return  path + 'uploader.swf';
     })();
     defaults.preventCache = true;
     Uploader.flash = Uploader.extend(function(){
@@ -678,11 +681,9 @@
                     params = {
                         id: this.id,
                         path: (function(){
-                            var path = location.pathname;
-                            path = path.split('/');
-                            path.pop();
-                            path = path.join('/') + '/';
-                            return path;
+                            var arr = location.pathname.split('/');
+                            arr.pop();
+                            return arr.join('/') + '/';
                         })(),
                         action: opt.action,
                         field: opt.fieldName,
