@@ -2,6 +2,8 @@
  * (c) 2012-2013 Jony Zhang <zj86@live.cn>, MIT Licensed
  * http://niceue.com/uploader/
  */
+/*jshint browser:true, strict:false*/
+/*global ActiveXObject*/
 ;(function(window, $){
     var noop = $.noop,
         //默认配置
@@ -38,12 +40,12 @@
             onMouseClick: noop,               //点击按钮 (element)
             //添加队列事件（可自定义队列）
             onAddQueue: function(file, err){
-                var html = '<ul>'
-                    + '<li class="f-name">'+ getShortName(file.name, 32) +'</li>'
-                    + '<li class="f-size">'+ stringifySize(file.size) +'</li>'
-                    + '<li class="f-progress">'+ (err ? err.name : '') +'</li>'
-                    + '<li class="f-operate"><a href="#" class="upload-cancel">x</a></li>'
-                    + '</ul>'
+                var html = '<ul>'/
+                    + '<li class="f-name">'+ getShortName(file.name, 32) +'</li>'/
+                    + '<li class="f-size">'+ stringifySize(file.size) +'</li>'/
+                    + '<li class="f-progress">'+ (err ? err.name : '') +'</li>'/
+                    + '<li class="f-operate"><a href="#" class="upload-cancel">x</a></li>'/
+                    + '</ul>'/
                     + '<div class="upload-progress"></div>';
                 return html;
             }
@@ -157,7 +159,7 @@
         function _ProgressEvent(e, type, file){
             var isProgress = type === 'progress';
             this.type = type;
-            this.timeStamp = +new Date;
+            this.timeStamp = +new Date();
             this.loaded = isProgress ? e.loaded : 0;
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
@@ -226,7 +228,7 @@
             //初始化
             init: function(el, str){
                 var self = this,
-                    $el =$(el), 
+                    $el =$(el),
                     opt = self.opt,
                     width = $el.outerWidth();
                     
@@ -309,9 +311,9 @@
             },
             
             onSelected: function(fileList){
-                var self = this, 
-                    opt = self.opt, 
-                    f, 
+                var self = this,
+                    opt = self.opt,
+                    f,
                     acceptExts = opt.fileTypeExts.split('|').join(','),
                     sizeLimit = parseSize(opt.fileSizeLimit),
                     queueHTML = '',
@@ -333,9 +335,8 @@
                     files[i] = file;
                     self.queue[i] = f;
                     if (self.$queuePanel) {
-                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ self.id + '___' + i +'">' 
-                                  + opt.onAddQueue.call(self, file, _err) 
-                                  + '</div>';
+                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ self.id + '___' + i +'">';
+                        queueHTML += opt.onAddQueue.call(self, file, _err) + '</div>';
                     }
                 });
                 if (self.$queuePanel) {
@@ -511,8 +512,8 @@
                         }
                     };
                     //所有上传事件交给代理处理
-                    xhr.upload.onloadstart = 
-                    xhr.upload.onprogress = 
+                    xhr.upload.onloadstart =
+                    xhr.upload.onprogress =
                     xhr.upload.onerror = _proxy;
                     
                     $.each({
@@ -530,7 +531,7 @@
                  *
                  * @method cancel
                  * @param {Number/String} id 文件id
-                 * 
+                 *
                  */
                 cancel: function(id){
                     var queue = self.queue;
@@ -596,7 +597,7 @@
         //生成Flash的HTML(只有src是必传的参数)
         function _embedSWF(opt){
             if (!opt.src) return;
-            var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' + (+new Date),
+            var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' + (+new Date()),
                 html = '',
                 attr = {
                     type: 'application/x-shockwave-flash',
@@ -652,17 +653,17 @@
             if (isIE) {
                 obj.style.display = "none";
                 (function(){
-					if (obj.readyState == 4) {
+                    if (obj.readyState === 4) {
                         //移除相关引用，防止内存泄露
-						for (var i in obj) {
-                            if (typeof obj[i] == "function") obj[i] = null;
+                        for (var i in obj) {
+                            if (typeof obj[i] === "function") obj[i] = null;
                         }
                         obj.parentNode.removeChild(obj);
-					} else {
+                    } else {
                         //正在加载中的flash不能直接移除，延时下重新执行
-						setTimeout(arguments.callee, 15);
-					}
-				})();
+                        setTimeout(arguments.callee, 15);
+                    }
+                })();
             } else {
                 obj.parentNode.removeChild(obj);
             }
@@ -711,7 +712,7 @@
              *
              * @method cancel
              * @param {Number/String} id 文件id
-             * 
+             *
              */
             cancel: function(id){
                 var queue = this.queue;
@@ -803,7 +804,7 @@
      */
     function getShortName(fileName, totle){
         var len = fileName.length,
-            start, 
+            start,
             end;
         if (len > totle) {
             end = 4 + 1 + (len - fileName.lastIndexOf('.') - 1);
@@ -868,13 +869,13 @@
          });
      */
     $.fn.uploader = function(){
-        var arg = arguments, 
+        var arg = arguments,
             attrId = $(this).attr('data-uploader');
         
         //不传参数，直接返回对应的对象或者找不到的话返回null
         if (!arg.length) {
-            return attrId ? window[attrId] : null; 
-        } 
+            return attrId ? window[attrId] : null;
+        }
         
         //传方法名，可调用Public方法
         if (typeof arg[0] === 'string' && arg[0].substr(0,2) !== 'on') {
@@ -890,7 +891,7 @@
         var opt = $.extend({}, defaults, arg[0]);
         opt.fileTypeExts = opt.fileTypeExts.replace(/ /g, '');
         //即使配置了高级模式，不支持的话也要降级
-        if (!Uploader[opt.mode]) opt.mode = 'flash'; 
+        if (!Uploader[opt.mode]) opt.mode = 'flash';
         return this.each(function(){
             var id = 'uploader_'+ (opt.id || Uploader.guid++);
             $(this).attr('data-uploader', id);
