@@ -454,11 +454,10 @@
      */
     if (!!(window.FormData && (new XMLHttpRequest()).upload)) {
         Uploader.html5 = Uploader.extend(function(){
-            var self,
-                map = {loadstart:'onStart', progress:'onProgress', error:'onError', load:'onSuccess', loadend:'onComplete'};
+            var map = {loadstart:'onStart', progress:'onProgress', error:'onError', load:'onSuccess', loadend:'onComplete'};
 
             function _getAccept(){
-                var arr = [], exts = self.opt.fileTypeExts.split('|').join(',').split(','), i, len = exts.length, ext;
+                var arr = [], exts = this.opt.fileTypeExts.split('|').join(',').split(','), i, len = exts.length, ext;
                 if (len) {
                     for (i=0; i<len; i++) {
                         ext = exts[i];
@@ -468,12 +467,8 @@
                 }
             }
             function _getXHR(){
-                self.xhr = self.xhr || new XMLHttpRequest();
-                return self.xhr;
-            }
-            //xhr事件代理
-            function _proxy(e){
-                self[map[e.type]](e);
+                this.xhr = this.xhr || new XMLHttpRequest();
+                return this.xhr;
             }
             
             return {
@@ -484,12 +479,14 @@
                 },
 
                 create: function(el){
-                    var str = '<input type="file" id="'+ this.id +'" class="uploader" accept="'+ _getAccept() +'"'+ (this.opt.multi ? ' multiple':'') +'>';
+                    var str = '<input type="file" id="'+ this.id +'" class="uploader" accept="'+ _getAccept.call(this) +'"'+ (this.opt.multi ? ' multiple':'') +'>';
                     this.init(el, str);
                 },
                 
                 upload: function(id){
-                    var opt = self.opt, xhr, data, file;
+                    var self = this,
+                        opt = self.opt, xhr, data, file;
+
                     file = self.getFile(id);
                     if (!file) {return;}
                     data = new FormData();
@@ -500,7 +497,7 @@
                         });
                     }
 
-                    xhr = _getXHR();
+                    xhr = _getXHR.call(self);
                     xhr.open(opt.method || 'POST', opt.action, true);
                     xhr.onreadystatechange = function(){
                         if (xhr.readyState === 4) {
@@ -514,7 +511,9 @@
                     //所有上传事件交给代理处理
                     xhr.upload.onloadstart =
                     xhr.upload.onprogress =
-                    xhr.upload.onerror = _proxy;
+                    xhr.upload.onerror = function(e) {
+                        self[map[e.type]](e);
+                    };
                     
                     $.each({
                         'Cache-Control': 'no-cache',
@@ -534,7 +533,9 @@
                  *
                  */
                 cancel: function(id){
-                    var queue = self.queue;
+                    var self = this,
+                        queue = self.queue;
+
                     if (id === '*') {
                         if ( self.xhr && self.xhr.readyState > 0 ) self.xhr.abort();
                         /*for (var i=0, len = self.queue.length; i<len; i++) {
