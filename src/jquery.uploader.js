@@ -263,6 +263,15 @@
                 
                 opt.onInit.call(self);
             },
+
+            setOption: function(name, value) {
+                var opt = this.opt;
+                if (typeof name === 'string') {
+                    opt[name] = value;
+                } else if(typeof name === 'object') {
+                    $.extend(opt, name);
+                }
+            },
             
             /**
              * 开始上传
@@ -875,18 +884,18 @@
          });
      */
     $.fn.uploader = function(){
-        var arg = arguments,
+        var args = arguments,
             attrId = $(this).attr('data-uploader');
         
         //不传参数，直接返回对应的对象或者找不到的话返回null
-        if (!arg.length) {
+        if (!args.length) {
             return attrId ? window[attrId] : null;
         }
         
         //传方法名，可调用Public方法
-        if (typeof arg[0] === 'string' && arg[0].substr(0,2) !== 'on') {
+        if (typeof args[0] === 'string' && args[0].substr(0,2) !== 'on') {
             if (attrId) {
-                window[attrId][arg[0]].apply(window[attrId], arg[1]);
+                window[attrId][args[0]].apply(window[attrId], Array.prototype.slice.call(args, 1));
             }
             return this;
         }
@@ -894,7 +903,7 @@
             window[ $(this).attr('data-uploader') ].destroy();
         });
         //传对象，初始化调用
-        var opt = $.extend({}, defaults, arg[0]);
+        var opt = $.extend({}, defaults, args[0]);
         opt.fileTypeExts = opt.fileTypeExts.replace(/ /g, '');
         //即使配置了高级模式，不支持的话也要降级
         if (!Uploader[opt.mode]) opt.mode = 'flash';
