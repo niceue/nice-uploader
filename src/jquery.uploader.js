@@ -230,8 +230,13 @@
                 var self = this,
                     $el =$(el),
                     opt = self.opt,
-                    width = $el.outerWidth();
-                    
+                    width = $el.outerWidth(),
+                    left = $el.css('left'),
+                    top = $el.css('top'),
+                    style = 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;margin-left:-'+ width +'px;';
+
+                if (left) style += 'left:'+left+';';
+                if (top) style += 'top:'+top+';';
                 if (opt.showSpeed) self.$speed = $(opt.showSpeed);
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
@@ -241,7 +246,7 @@
                         self.$queuePanel = $('#'+ self.id + "_queue");
                     }
                 }
-                self.$btnProxy = $('<span class="upload-el"><div class="upload-btn-wrap" style="width:'+ width +'px;height:'+ $el.outerHeight() +'px;margin-left:-'+ width +'px;">'+ str +'</div></span>');
+                self.$btnProxy = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
                 $el.after(self.$btnProxy);
                 self.el = $('#'+self.id)[0];
                 self.$btn = $el;
