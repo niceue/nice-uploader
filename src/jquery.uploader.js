@@ -2,7 +2,7 @@
  * (c) 2012-2013 Jony Zhang <zj86@live.cn>, MIT Licensed
  * http://niceue.com/uploader/
  */
-/*jshint browser:true, strict:false*/
+/*jshint browser:true, strict:false, multistr:true*/
 /*global ActiveXObject*/
 ;(function(window, $){
     var noop = $.noop,
@@ -40,13 +40,13 @@
             onMouseClick: noop,               //点击按钮 (element)
             //添加队列事件（可自定义队列）
             onAddQueue: function(file, err){
-                var html = '<ul>'/
-                    + '<li class="f-name">'+ getShortName(file.name, 32) +'</li>'/
-                    + '<li class="f-size">'+ stringifySize(file.size) +'</li>'/
-                    + '<li class="f-progress">'+ (err ? err.name : '') +'</li>'/
-                    + '<li class="f-operate"><a href="#" class="upload-cancel">x</a></li>'/
-                    + '</ul>'/
-                    + '<div class="upload-progress"></div>';
+                var html = '<ul>\
+                    <li class="f-name">'+ getShortName(file.name, 32) +'</li>\
+                    <li class="f-size">'+ stringifySize(file.size) +'</li>\
+                    <li class="f-progress">'+ (err ? err.name : '') +'</li>\
+                    <li class="f-operate"><a href="#" class="upload-cancel">x</a></li>\
+                    </ul>\
+                    <div class="upload-progress"></div>';
                 return html;
             }
         },
@@ -153,7 +153,6 @@
      * @class Uploader
      */
     var Uploader = Class.extend(function(){
-        var files = {}, markTime, markLoad;
         
         //进度事件
         function _ProgressEvent(e, type, file){
@@ -208,8 +207,8 @@
             return this.acceptExts[type];
         }
         //计算上传速度
-        function _getSpeed(loaded, time){
-            return stringifySize( (loaded - markLoad) * 1000 / (time - markTime) ) + '/s';
+        function _getSpeed(diffLoaded, diffTime){
+            return stringifySize( diffLoaded * 1000 / diffTime ) + '/s';
         }
         //显示上传进度
         function _showProgress(percent){
@@ -227,9 +226,9 @@
         return {
             //初始化
             init: function(el, str){
-                var self = this,
+                var me = this,
                     $el =$(el),
-                    opt = self.opt,
+                    opt = me.opt,
                     width = $el.outerWidth(),
                     left = $el.css('left'),
                     top = $el.css('top'),
@@ -237,22 +236,22 @@
 
                 if (left) style += 'left:'+left+';';
                 if (top) style += 'top:'+top+';';
-                if (opt.showSpeed) self.$speed = $(opt.showSpeed);
+                if (opt.showSpeed) me.$speed = $(opt.showSpeed);
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
-                        self.$queuePanel = $(opt.showQueue).addClass('upload-queue');
+                        me.$queuePanel = $(opt.showQueue).addClass('upload-queue');
                     } else {
-                        $el.after('<div class="upload-queue" id="'+ self.id +'_queue"></div>');
-                        self.$queuePanel = $('#'+ self.id + "_queue");
+                        $el.after('<div class="upload-queue" id="'+ me.id +'_queue"></div>');
+                        me.$queuePanel = $('#'+ me.id + "_queue");
                     }
                 }
-                self.$btnProxy = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
-                $el.after(self.$btnProxy);
-                self.el = $('#'+self.id)[0];
-                self.$btn = $el;
-                self.speed = '';
-                self.queue = [];
-                self.acceptExts = (function(str){
+                me.$btnProxy = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
+                $el.after(me.$btnProxy);
+                me.el = $('#'+me.id)[0];
+                me.$btn = $el;
+                me.speed = '';
+                me.queue = [];
+                me.acceptExts = (function(str){
                     if (str === '*') return str;
                     var obj = {};
                     $.each(str.split('|').join(',').split(','), function(i, n){
@@ -261,7 +260,7 @@
                     return obj;
                 })(opt.fileTypeExts);
                 
-                opt.onInit.call(self);
+                opt.onInit.call(me);
             },
 
             setOption: function(name, value) {
@@ -314,7 +313,7 @@
             },
             
             getFile: function(id){
-                return this.validId(id) ? files[id] : null;
+                return this.validId(id) ? this.files[id] : null;
             },
             
             validId: function(id){
@@ -325,38 +324,38 @@
             },
             
             onSelected: function(fileList){
-                var self = this,
-                    opt = self.opt,
+                var me = this,
+                    opt = me.opt,
                     f,
                     acceptExts = opt.fileTypeExts.split('|').join(','),
                     sizeLimit = parseSize(opt.fileSizeLimit),
                     queueHTML = '',
                     len = fileList.length;
-                self.queue = [];
-                files = {};
+                me.queue = [];
+                me.files = {};
                 $.each(fileList, function(i, file){
                     var _err;
                     f = new _File(+i, file);
-                    if (self.acceptExts !== '*' && !_acceptType.call(self, file.name)) { //排除不允许的文件类型
-                        self.onError( {code: 601, params: [acceptExts]}, false );
+                    if (me.acceptExts !== '*' && !_acceptType.call(me, file.name)) { //排除不允许的文件类型
+                        me.onError( {code: 601, params: [acceptExts]}, false );
                         return;
                     }
                     if ( sizeLimit > 0 && f.size > sizeLimit ) { //触发文件大小错误
                         f.error = 'Size Error';
                         _err = new _Error({code: 602, params: [opt.fileSizeLimit.toUpperCase()], file: f});
-                        self.onError(_err, false);
+                        me.onError(_err, false);
                     }
-                    files[i] = file;
-                    self.queue[i] = f;
-                    if (self.$queuePanel) {
-                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ self.id + '___' + i +'">';
-                        queueHTML += opt.onAddQueue.call(self, file, _err) + '</div>';
+                    me.files[i] = file;
+                    me.queue[i] = f;
+                    if (me.$queuePanel) {
+                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ me.id + '___' + i +'">';
+                        queueHTML += opt.onAddQueue.call(me, file, _err) + '</div>';
                     }
                 });
-                if (self.$queuePanel) {
-                    self.$queuePanel.html( queueHTML );
+                if (me.$queuePanel) {
+                    me.$queuePanel.html( queueHTML );
                 }
-                if ( opt.onSelected.call(this, self.queue) !== false && opt.auto ) self.start();
+                if ( opt.onSelected.call(this, me.queue) !== false && opt.auto ) me.start();
             },
             
             onStart: function(e){
@@ -364,21 +363,22 @@
                 this.loadId = file.id;
                 this.loadFile = file;
                 e = new _ProgressEvent(e, 'loadstart', file);
-                markTime = e.timeStamp-1;
-                markLoad = 0;
+                file._t = e.timeStamp-1;
+                file._l = 0;
                 this.el.style.top = '1000px';
                 Uploader.uploading = true;
                 this.opt.onStart.call(this, e);
             },
             
             onProgress: function(e){
-                e = new _ProgressEvent(e, 'progress', this.loadFile);
+                var file = this.loadFile;
+                e = new _ProgressEvent(e, 'progress', file);
                 if (e.lengthComputable) {
-                    this.speed = _getSpeed(e.loaded, e.timeStamp);
+                    this.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
                     if (this.$speed) this.$speed.text(this.speed);
                     if (this.$queuePanel) _showProgress.call(this,  ((e.loaded / e.total) * 100).toFixed(1) + '%' );
-                    markTime = e.timeStamp;
-                    markLoad = e.loaded;
+                    file._t = e.timeStamp;
+                    file._l = e.loaded;
                 }
                 this.opt.onProgress.call(this, e);
             },
@@ -434,7 +434,7 @@
             },
             
             onAllComplete: function(){
-                files = {};
+                this.files = {};
                 this.queue = [];
                 this.loadId = 0;
                 this.loadFile = null;
@@ -487,7 +487,6 @@
             
             return {
                 __construct: function(id, options){
-                    self = this;
                     this.id = id;
                     this.opt = options;
                 },
@@ -498,10 +497,10 @@
                 },
                 
                 upload: function(id){
-                    var self = this,
-                        opt = self.opt, xhr, data, file;
+                    var me = this,
+                        opt = me.opt, xhr, data, file;
 
-                    file = self.getFile(id);
+                    file = me.getFile(id);
                     if (!file) {return;}
                     data = new FormData();
                     data.append(opt.fieldName, file);
@@ -511,14 +510,14 @@
                         });
                     }
 
-                    xhr = _getXHR.call(self);
+                    xhr = _getXHR.call(me);
                     xhr.open(opt.method || 'POST', opt.action, true);
                     xhr.onreadystatechange = function(){
                         if (xhr.readyState === 4) {
                             if (xhr.status === 200) {
-                                self.onSuccess(xhr.responseText);
+                                me.onSuccess(xhr.responseText);
                             } else {
-                                self.onError({code: xhr.status});
+                                me.onError({code: xhr.status});
                             }
                         }
                     };
@@ -526,7 +525,7 @@
                     xhr.upload.onloadstart =
                     xhr.upload.onprogress =
                     xhr.upload.onerror = function(e) {
-                        self[map[e.type]](e);
+                        me[map[e.type]](e);
                     };
                     
                     $.each({
@@ -547,20 +546,20 @@
                  *
                  */
                 cancel: function(id){
-                    var self = this,
-                        queue = self.queue;
+                    var me = this,
+                        queue = me.queue;
 
                     if (id === '*') {
-                        if ( self.xhr && self.xhr.readyState > 0 ) self.xhr.abort();
-                        /*for (var i=0, len = self.queue.length; i<len; i++) {
-                            self.opt.onCancel.call(self, self.queue.splice(0, 1));
+                        if ( me.xhr && me.xhr.readyState > 0 ) me.xhr.abort();
+                        /*for (var i=0, len = me.queue.length; i<len; i++) {
+                            me.opt.onCancel.call(me, me.queue.splice(0, 1));
                         }*/
-                        self.onClearQueue();
+                        me.onClearQueue();
                     } else {
                         if (!queue.length) {return;}
                         if (!id) id = queue[0].id;
-                        if ( self.xhr && self.xhr.readyState > 0 && id === self.loadId ) self.xhr.abort();
-                        self.onCancel(id);
+                        if ( me.xhr && me.xhr.readyState > 0 && id === me.loadId ) me.xhr.abort();
+                        me.onCancel(id);
                     }
                 },
                 
