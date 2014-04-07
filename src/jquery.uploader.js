@@ -718,9 +718,6 @@
                 if (opt.debug) params.debug = 1;
                 if (opt.method) params.method = opt.method;
                 if (opt.formData) params.formData = $.param(opt.formData);
-                /*if (!swfVersion || swfVersion < 9) {
-                    //this.onError({code: 600});
-                }*/
                 this.init( _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
                 
             },
