@@ -16,11 +16,14 @@ a:hover {text-decoration:underline;}
 <body>
     <h2>建议打开控制台查看上传过程</h2>
     <br>
-	<span style="color:red">注意：1、本示例限制了只能上传 jpg,gif,png | zip,rar 格式；2、文件大小超过200kb则禁止上传</span>
+	<span style="color:red">注意：1、本示例限制了只能上传 jpg,gif,png | zip,rar 格式；2、文件大小超过1M（1024KB）则禁止上传</span>
     <br><br>
     
-	<button type="button" id="uploader">选择文件</button> 
-    <a href="javascript:uploader_0.start();" style="margin-left:20px;">开始上传</a> &nbsp;&nbsp; <a href="javascript:uploader_0.cancel('*');">清空队列</a>
+	<button type="button" id="selectFile">选择文件</button>
+    
+    <a href="javascript:$('#selectFile').uploader('start');" style="margin-left:20px;">开始上传</a> &nbsp;&nbsp; 
+    <a href="$('#selectFile').uploader('cancel', '*');">清空队列</a>
+    
     <div id="queue" style="width:600px"></div>
     <br><br>
     <div id="preview"></div>
@@ -32,84 +35,93 @@ a:hover {text-decoration:underline;}
 <script type="text/javascript">
 function log(obj){
     if ('console' in window) {
-        console.log(obj);
+        console.log.apply(console, arguments);
     }
 }
 $(function(){
     var previewHTML = '';
     
-    $('#uploader').uploader({
-        action: 'upload.php',
-        //mode: 'flash',
-        multi: true,
-        auto: false,
-        showQueue: '#queue',
-        fileSizeLimit: '200k',
-        fileTypeDesc: '选择图片|选择压缩文件',
-        fileTypeExts: 'jpg,gif,png|zip,rar',
+    $('#selectFile').uploader({
+        action: 'upload.php',   //服务端脚本
+        //mode: 'flash',        //上传模式，html5/flash
+        name: "file",           //字段名
+        formData: {},           //
+        multiple: true,         //是否多选
+        auto: false,            //是否自动上传
+        showQueue: '#queue',                        //显示队列的位置（传递jQuery选择器自定义队列显示的元素，传递true自动生成队列）
+        fileSizeLimit: '1M',                        //文件大小限制（'100kb' '5M' 等）
+        fileTypeDesc: '选择图片|选择压缩文件',      //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
+        fileTypeExts: 'jpg,gif,png|zip,rar',        //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,png,gif'）
 
-        /*onMouseClick: function(){
+        /*
+        // 鼠标点击触发按钮
+        onMouseClick: function(){
             //log('onMouseClick')
         },
+        // 鼠标经过触发按钮
         onMouseOver: function(el){
             //log('onMouseOver')
         },
+        // 鼠标移出触发按钮
         onMouseOut: function(el){
             //log('onMouseOut')
         },*/
         
+        // 上传初始化完成
         onInit:function(){
             log('onInit');
-            if (this.opt.mode === 'html5') {
+            if (this.options.mode === 'html5') {
                 if ($.uploader.html5) log('恭喜，您的浏览器支持HTML5方式上传文件！');
                 else log('抱歉，由于您的浏览器不支持HTML5上传，将自动降级到Flash方式');
             } else {
                 log('您设置了强制使用Flash方式上传！');
             }
             var o = '当前配置：';
-            o += this.opt.multi ? '允许多选' : '只能单选';
-            o += this.opt.auto ? '，选择完文件后自动上传' : '，选择完文件后手动上传';
+            o += this.options.multi ? '允许多选' : '只能单选';
+            o += this.options.auto ? '，选择完文件后自动上传' : '，选择完文件后手动上传';
             log(o);
             log("===============================================");
         },
+        // 选择文件
         onSelected: function(filelist){
-            log(' ');
-            log('onSelected');
-            log(filelist);
+            log('onSelected', filelist);
             log("===============================================");
         },
+        // 取消选择文件
         onCancel: function(file){
-            log('onCancel');
-            log(file);
+            log('onCancel', file);
             log("===============================================");
         },
+        // 开始上传
         onStart: function(e){
-            log('onStart');
+            log('onStart', e);
             log("===============================================");
         },
+        // 上传进行中
         onProgress: function(e){
-            log('onProgress')
-            log(e)
-            log('上传速度：'+ this.speed)
+            log('onProgress', e)
+            log('上传速度：'+ e.speed)
             log("===============================================");
         },
+        // 上传发生错误
         onError: function(e){
-            log('onError');
-            log(e);
+            log('onError', e);
             log("===============================================");
         },
+        // 上传成功
         onSuccess: function(e){
-            log('onSuccess');
-            log('文件地址：'+ e.data);
-            log(e);
+            log('onSuccess', e);
+            log('上传成功！文件地址：'+ e.data);
             if (e.file.type === "image/jpeg") previewHTML += '<img src="'+ e.data +'">';
             log("===============================================");
+            log(" ");
         },
+        // 单个文件处理完成（error or success）
         onComplete: function(e){
-            log('onComplete');
-            log(e);
+            log('onComplete', e);
             log("===============================================");
         },
+        // 全部文件处理完成（error or success）
         onAllComplete: function(){
             log('onAllComplete');
             if ( previewHTML ) {
@@ -118,6 +130,7 @@ $(function(){
             }
             log("===============================================");
         },
+        // 清空队列
         onClearQueue: function(){
             log('onClearQueue');
             log("===============================================");

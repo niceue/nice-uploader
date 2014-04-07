@@ -4,21 +4,23 @@
  */
 /*jshint browser:true, strict:false, multistr:true*/
 /*global ActiveXObject*/
-;(function(window, $){
-    var noop = $.noop,
+;(function(window, $, undefined){
+    var NS = 'uploader',
+        EXPANDO = NS + Math.random() * 10E16,
+        noop = $.noop,
         //默认配置
         defaults = {
             mode: 'html5',                    //上传模式
             action: "",                       //服务端处理脚本
-            fieldName: 'file',                //POST字段名
+            name: 'file',                     //POST字段名
             formData: null,                   //附加传送的表单数据
-            multi: false,                     //是否多选文件
+            multiple: false,                  //是否多选文件
             auto: true,                       //是否自动上传（默认选择完文件后自动上传）
-            showQueue: true,                  //是否显示队列（传递jQuery选择器自定义队列显示的元素，传递false关闭队列及进度条）
-            showSpeed: '',                    //是否显示速度（传递jQuery选择器自定义速度显示的元素）
+            showQueue: false,                 //显示队列的位置（传递jQuery选择器自定义队列显示的元素，传递true自动生成队列）
             fileSizeLimit: 0,                 //文件大小限制（'100kb' '5M' 等）
             fileTypeDesc: '',                 //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
             fileTypeExts: '',                 //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,png,gif'）
+            
             //上传事件（如果有事件参数，则包含event.file）
             onInit: noop,                     //初始化完成 ()
             onClearQueue: noop,               //清空队列 ()
@@ -44,7 +46,7 @@
                     <li class="f-name">'+ getShortName(file.name, 32) +'</li>\
                     <li class="f-size">'+ stringifySize(file.size) +'</li>\
                     <li class="f-progress">'+ (err ? err.name : '') +'</li>\
-                    <li class="f-operate"><a href="#" class="upload-cancel">x</a></li>\
+                    <li class="f-operate"><a href="#" class="upload-cancel">&times;</a></li>\
                     </ul>\
                     <div class="upload-progress"></div>';
                 return html;
@@ -123,22 +125,25 @@
     //简单实现类继承
     var Class = function(){};
     Class.extend = function(obj) {
-        var parent = this.prototype, Class, proto, init, key;
+        var parent = this.prototype, Class, proto, init, tmp = parent, key;
         if (typeof obj === 'function') obj = obj.call(parent);
         init = obj.__construct;
-        delete obj.__construct;
+        while(!init) {
+            init = tmp.constructor;
+            tmp = tmp.__super();
+        }
         //继承父级prototype而不执行构造函数
         proto = new this('!-');
         //拷贝公共方法
         for (key in obj) proto[key] = obj[key];
         //代理的类
         Class = function() {
-            if ( arguments[0]!=='!-' && init ) init.apply(this, arguments);
+            if ( arguments[0]!=='!-' ) init.apply(this, arguments);
         };
         proto.constructor = Class;
         //子类调用父类方法的接口
         proto.__super = function(fnName, args){
-            return fnName ? parent[fnName].apply(this, args) : parent;
+            return fnName ? parent[fnName].apply(this, args ? args : arguments.callee.caller.arguments) : parent;
         };
 
         Class.prototype = proto;
@@ -158,7 +163,7 @@
         function _ProgressEvent(e, type, file){
             var isProgress = type === 'progress';
             this.type = type;
-            this.timeStamp = +new Date();
+            this.timeStamp = e && e.timeStamp || +new Date();
             this.loaded = isProgress ? e.loaded : 0;
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
@@ -172,7 +177,7 @@
             this.type = !f.type ? mimes[ f.name.split('.').pop() ] :
                         f.type.length < 6 ? mimes[f.type] :
                         f.type; //文件后缀最长5字符
-            this.lastModifiedDate = +f.lastModifiedDate;
+            this.lastModifiedDate = new Date(+f.lastModifiedDate);
             if (f.error) this.error = f.error;
         }
         //包装异常
@@ -224,11 +229,29 @@
         }
         
         return {
+            __construct: function(element, options) {
+                var guid = element[EXPANDO], id = NS+'_', obj;
+                if (guid!==undefined) {
+                    id += guid;
+                    obj = window[id];
+                    obj && obj.destroy();
+                } else {
+                    guid = Uploader.guid++;
+                    id += guid;
+                    element[EXPANDO] = guid;
+                }
+                this.id = id;
+                this.options = options;
+                this.element = element;
+                this.create();
+                window[id] = this;
+            },
+
             //初始化
-            init: function(el, str){
+            init: function(str){
                 var me = this,
-                    $el =$(el),
-                    opt = me.opt,
+                    $el =$(me.element),
+                    opt = me.options,
                     width = $el.outerWidth(),
                     left = $el.css('left'),
                     top = $el.css('top'),
@@ -236,20 +259,18 @@
 
                 if (left) style += 'left:'+left+';';
                 if (top) style += 'top:'+top+';';
-                if (opt.showSpeed) me.$speed = $(opt.showSpeed);
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
-                        me.$queuePanel = $(opt.showQueue).addClass('upload-queue');
+                        me.$queue = $(opt.showQueue).addClass('upload-queue');
                     } else {
                         $el.after('<div class="upload-queue" id="'+ me.id +'_queue"></div>');
-                        me.$queuePanel = $('#'+ me.id + "_queue");
+                        me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                me.$btnProxy = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
-                $el.after(me.$btnProxy);
-                me.el = $('#'+me.id)[0];
-                me.$btn = $el;
-                me.speed = '';
+                me.$browseEl = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
+                $el.after(me.$browseEl);
+                me.$el = $el;
+                me.browse = $('#'+me.id)[0];
                 me.queue = [];
                 me.acceptExts = (function(str){
                     if (str === '*') return str;
@@ -264,7 +285,7 @@
             },
 
             setOption: function(name, value) {
-                var opt = this.opt;
+                var opt = this.options;
                 if (typeof name === 'string') {
                     opt[name] = value;
                 } else if(typeof name === 'object') {
@@ -291,24 +312,14 @@
                 }
             },
             
-            /**
-             * 停止上传
-             *
-             * @method stop
-             */
-            stop: function(){
-            
-            },
-            
             //移除队列的一项（DOM）
             remove: function(id){
-                if (this.$queuePanel) $('#'+this.id + '___' + id).delay(1000).fadeOut(500).remove();
+                if (this.$queue) $('#'+this.id + '___' + id).delay(1000).fadeOut(500).remove();
             },
             
             destroy: function(){
-                this.$btn && this.$btn.removeAttr('data-uploader');
-                this.$btnProxy && this.$btnProxy.remove();
-                this.$queuePanel && this.$queuePanel.remove();
+                this.$browseEl && this.$browseEl.remove();
+                this.$queue && this.$queue.remove();
                 delete window[this.id];
             },
             
@@ -325,7 +336,7 @@
             
             onSelected: function(fileList){
                 var me = this,
-                    opt = me.opt,
+                    opt = me.options,
                     f,
                     acceptExts = opt.fileTypeExts.split('|').join(','),
                     sizeLimit = parseSize(opt.fileSizeLimit),
@@ -347,40 +358,43 @@
                     }
                     me.files[i] = file;
                     me.queue[i] = f;
-                    if (me.$queuePanel) {
+                    if (me.$queue) {
                         queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ me.id + '___' + i +'">';
                         queueHTML += opt.onAddQueue.call(me, file, _err) + '</div>';
                     }
                 });
-                if (me.$queuePanel) {
-                    me.$queuePanel.html( queueHTML );
+                if (me.$queue) {
+                    me.$queue.html( queueHTML );
                 }
                 if ( opt.onSelected.call(this, me.queue) !== false && opt.auto ) me.start();
             },
             
             onStart: function(e){
-                var file = this.queue[0];
-                this.loadId = file.id;
-                this.loadFile = file;
+                var me = this,
+                    file = me.queue[0];
+
+                me.loadId = file.id;
+                me.loadFile = file;
                 e = new _ProgressEvent(e, 'loadstart', file);
                 file._t = e.timeStamp-1;
                 file._l = 0;
-                this.el.style.top = '1000px';
+                me.browse.style.display = 'none';
                 Uploader.uploading = true;
-                this.opt.onStart.call(this, e);
+                me.options.onStart.call(me, e);
             },
             
             onProgress: function(e){
-                var file = this.loadFile;
+                var me = this,
+                    file = me.loadFile;
+
                 e = new _ProgressEvent(e, 'progress', file);
                 if (e.lengthComputable) {
-                    this.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
-                    if (this.$speed) this.$speed.text(this.speed);
-                    if (this.$queuePanel) _showProgress.call(this,  ((e.loaded / e.total) * 100).toFixed(1) + '%' );
+                    e.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
+                    if (me.$queue) _showProgress.call(me,  ((e.loaded / e.total) * 100).toFixed(1) + '%' );
                     file._t = e.timeStamp;
                     file._l = e.loaded;
                 }
-                this.opt.onProgress.call(this, e);
+                me.options.onProgress.call(me, e);
             },
             
             onCancel: function(id){
@@ -392,19 +406,19 @@
                     }
                 });
                 this.remove(id);
-                this.opt.onCancel.call(this, this.queue.splice(index, 1));
+                this.options.onCancel.call(this, this.queue.splice(index, 1));
             },
             
             onClearQueue: function(){
                 this.queue = [];
-                if (this.$queuePanel) this.$queuePanel[0].innerHTML = '';
-                this.el.style.top = '';
+                if (this.$queue) this.$queue[0].innerHTML = '';
+                this.browse.style.display = '';
                 Uploader.uploading = false;
-                this.opt.onClearQueue.call(this);
+                this.options.onClearQueue.call(this);
             },
             
             onError: function(e, isComplete){
-                var opt = this.opt,
+                var opt = this.options,
                     id = e.id || this.loadId || null,
                     f = id ? (e.file || _getFileById.call(this, id)) : null;
                 e.file = f;
@@ -413,48 +427,48 @@
                     e.message = opt.language[e.code];
                 }
                 if (id !== null) {
-                    if (this.$queuePanel) $('#'+this.id + '___' + id).addClass('upload-error').find('.f-progress').text(e.name);
+                    if (this.$queue) $('#'+this.id + '___' + id).addClass('upload-error').find('.f-progress').text(e.name);
                     if (isComplete !== false) this.onComplete();
                 }
-                this.opt.onError.call(this, e);
+                this.options.onError.call(this, e);
             },
             
             onSuccess: function(data){
                 var e = new _ProgressEvent(null, 'load', this.loadFile);
                 e.data = data;
                 _showProgress.call(this, '100%');
-                this.opt.onSuccess.call(this, e);
+                this.options.onSuccess.call(this, e);
                 this.onComplete();
             },
             
             onComplete: function(){
                 var e = new _ProgressEvent(null, 'loadend', this.queue.shift());
-                this.opt.onComplete.call(this, e);
+                this.options.onComplete.call(this, e);
                 this.start(true);
             },
             
             onAllComplete: function(){
-                this.files = {};
-                this.queue = [];
-                this.loadId = 0;
-                this.loadFile = null;
-                this.el.style.top = '';
+                var me = this;
+                me.files = {};
+                me.queue = [];
+                me.loadId = 0;
+                me.loadFile = null;
+                me.browse.style.display = '';
                 Uploader.uploading = false;
-                if (this.$speed) this.$speed.text('');
-                this.opt.onAllComplete.call(this);
+                me.options.onAllComplete.call(me);
             },
                 
             onMouseOver: function(){
-                this.$btn.addClass('upload-btn-over');
-                this.opt.onMouseOver.call(this, this.$btn);
+                this.$el.addClass('upload-btn-over');
+                this.options.onMouseOver.call(this, this.$btn);
             },
             onMouseOut: function(){
-                this.$btn.removeClass('upload-btn-over');
-                this.opt.onMouseOut.call(this, this.$btn);
+                this.$el.removeClass('upload-btn-over');
+                this.options.onMouseOut.call(this, this.$btn);
             },
             onMouseClick: function(){
-                this.$btn.trigger('click');
-                this.opt.onMouseClick.call(this, this.$btn);
+                this.$el.trigger('click');
+                this.options.onMouseClick.call(this, this.$btn);
             }
         };
     });
@@ -471,11 +485,11 @@
             var map = {loadstart:'onStart', progress:'onProgress', error:'onError', load:'onSuccess', loadend:'onComplete'};
 
             function _getAccept(){
-                var arr = [], exts = this.opt.fileTypeExts.split('|').join(',').split(','), i, len = exts.length, ext;
+                var arr = [], exts = this.options.fileTypeExts.replace('|', ',').split(','), i, len = exts.length, ext;
                 if (len) {
                     for (i=0; i<len; i++) {
                         ext = exts[i];
-                        if (mimes[ext]) arr.push(mimes[ext]);
+                        if (mimes[ext]) arr.push( ext==='csv' ? '.csv' : mimes[ext] );
                     }
                     return arr.join(',');
                 }
@@ -486,24 +500,23 @@
             }
             
             return {
-                __construct: function(id, options){
-                    this.id = id;
-                    this.opt = options;
-                },
+                /*__construct: function(){
+                    this.__super('__construct');
+                },*/
 
-                create: function(el){
-                    var str = '<input type="file" id="'+ this.id +'" class="uploader" accept="'+ _getAccept.call(this) +'"'+ (this.opt.multi ? ' multiple':'') +'>';
-                    this.init(el, str);
+                create: function(){
+                    var str = '<input type="file" id="'+ this.id +'" class="uploader" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
+                    this.init(str);
                 },
                 
                 upload: function(id){
                     var me = this,
-                        opt = me.opt, xhr, data, file;
+                        opt = me.options, xhr, data, file;
 
                     file = me.getFile(id);
                     if (!file) {return;}
                     data = new FormData();
-                    data.append(opt.fieldName, file);
+                    data.append(opt.name, file);
                     if (opt.formData) {
                         $.each(opt.formData, function(key, val){
                             data.append(key, val);
@@ -551,9 +564,6 @@
 
                     if (id === '*') {
                         if ( me.xhr && me.xhr.readyState > 0 ) me.xhr.abort();
-                        /*for (var i=0, len = me.queue.length; i<len; i++) {
-                            me.opt.onCancel.call(me, me.queue.splice(0, 1));
-                        }*/
                         me.onClearQueue();
                     } else {
                         if (!queue.length) {return;}
@@ -569,7 +579,7 @@
                  * @method destroy
                  */
                 destroy: function(){
-                    if (this.el) this.el.parentNode.removeChild(this.el);
+                    if (this.browse) this.browse.parentNode.removeChild(this.browse);
                     this.xhr = null;
                     this.__super('destroy');
                 }
@@ -591,10 +601,9 @@
         if (path) path += '/';
         return  path + 'uploader.swf';
     })();
-    defaults.preventCache = true;
     Uploader.flash = Uploader.extend(function(){
         var isIE = !!window.ActiveXObject,
-            swfVersion = (function(){
+            /*swfVersion = (function(){
                 var ver, SF = 'ShockwaveFlash', plug;
                 if (isIE) {
                     try {
@@ -606,12 +615,14 @@
                     if (typeof plug === 'object') ver = plug.description.split(' ')[2];
                 }
                 return parseInt(ver, 10);
-            })();
+            })(),*/
+            PREVENT_CACHE = +new Date();
         
         //生成Flash的HTML(只有src是必传的参数)
         function _embedSWF(opt){
             if (!opt.src) return;
-            var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' + (+new Date()),
+
+            var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' +  PREVENT_CACHE,
                 html = '',
                 attr = {
                     type: 'application/x-shockwave-flash',
@@ -684,15 +695,12 @@
         }
         
         return {
-            __construct: function(id, options){
-                this.id = id;
-                this.opt = options;
-            },
+            /*__construct: function(){
+                this.__super('__construct');
+            },*/
             
-            swfVersion: swfVersion,
-            
-            create: function(el){
-                var opt = this.opt,
+            create: function(){
+                var opt = this.options,
                     params = {
                         id: this.id,
                         path: (function(){
@@ -701,24 +709,24 @@
                             return arr.join('/') + '/';
                         })(),
                         action: opt.action,
-                        field: opt.fieldName,
+                        field: opt.name,
+                        src: opt.swf,
                         desc: opt.fileTypeDesc,
                         ext: opt.fileTypeExts
                     };
-                if (opt.multi) params.multi = 1;
+                if (opt.multiple) params.multiple = 1;
                 if (opt.debug) params.debug = 1;
                 if (opt.method) params.method = opt.method;
                 if (opt.formData) params.formData = $.param(opt.formData);
-                if (!swfVersion || swfVersion < 9) {
+                /*if (!swfVersion || swfVersion < 9) {
                     //this.onError({code: 600});
-                    $(el).addClass('uploader-init-error');
-                }
-                this.init( el, _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
+                }*/
+                this.init( _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
                 
             },
             
             upload: function(id){
-                this.validId(id) && this.el.startUpload(''+id);
+                this.validId(id) && this.browse.startUpload(''+id);
             },
             
             /**
@@ -733,7 +741,7 @@
                 if (queue.length) {
                     if (!id) id = queue[0].id;
                 }
-                this.el.cancelUpload(id);
+                this.browse.cancelUpload(id);
             },
             
             /**
@@ -742,7 +750,7 @@
              * @method destroy
              */
             destroy: function(){
-                _removeSWF(this.el);
+                _removeSWF(this.browse);
                 this.__super('destroy');
             }
         };
@@ -751,21 +759,21 @@
     
     //集中处理事件
     $(function(){
-        var $body = $('body'), NS = '.uploader';
+        var $body = $('body');
         
-        $body.on('change' + NS, ':file.uploader', function(){
+        $body.on('input change.' + NS, ':file.'+NS, function(){
             window[this.id].onSelected(this.files);
-        }).on('click' + NS, ':file.uploader', function(e){
+        }).on('click.' + NS, ':file.'+NS, function(){
             window[this.id].onMouseClick();
         });
         //注册鼠标移入和移出事件
-        $body.on('mouseenter' + NS, 'div.upload-btn-wrap', function(e){
+        $body.on('mouseenter.' + NS, 'div.upload-btn-wrap', function(){
             window[this.firstChild.id].onMouseOver();
-        }).on('mouseleave' + NS, 'div.upload-btn-wrap', function(e){
+        }).on('mouseleave.' + NS, 'div.upload-btn-wrap', function(){
             window[this.firstChild.id].onMouseOut();
         });
         //删除队列中的文件
-        $body.on('click' + NS, 'a.upload-cancel', function(e){
+        $body.on('click.' + NS, 'a.upload-cancel', function(e){
             var $queue = $(this).closest('.queue'),
                 arr = $queue.attr('id').split('___');
             if ($queue.hasClass('upload-error')) {
@@ -870,7 +878,7 @@
      * @example
      *   $('#file').uploader({
             action: 'upload.php',
-            fieldName: 'img',
+            name: 'img',
             fileTypeDesc: '图片文件',
             fileTypeExts: 'jpg,gif,png',
             fileSizeLimit: '200kb',
@@ -882,36 +890,37 @@
             }
          });
      */
-    $.fn.uploader = function(){
+    $.fn.uploader = function(options){
         var args = arguments,
-            attrId = $(this).attr('data-uploader');
-        
+            guid = this[0][EXPANDO],
+            id;
+
+        if (guid!==undefined) {
+            id = NS+'_'+guid;
+        }
+
         //不传参数，直接返回对应的对象或者找不到的话返回null
         if (!args.length) {
-            return attrId ? window[attrId] : null;
+            return id ? window[id] : null;
         }
         
         //传方法名，可调用Public方法
-        if (typeof args[0] === 'string' && args[0].substr(0,2) !== 'on') {
-            if (attrId) {
-                window[attrId][args[0]].apply(window[attrId], Array.prototype.slice.call(args, 1));
-            }
-            return this;
+        if (typeof options === 'string' && options.substr(0,2) !== 'on') {
+            if (id) window[id][options].apply(window[id], Array.prototype.slice.call(args, 1));
+        } else {
+            this.off('remove.'+NS).on('remove.'+NS, function(){
+                window[ this[EXPANDO] ].destroy();
+            });
+            //传对象，初始化调用
+            options = $.extend({}, defaults, options);
+            options.fileTypeExts = options.fileTypeExts.replace(/ /g, '');
+            //即使配置了高级模式，不支持的话也要降级
+            if (!Uploader[options.mode]) options.mode = 'flash';
+            this.each(function(){
+                new Uploader[options.mode](this, options);
+            });
         }
-        this.on('remove', function(){
-            window[ $(this).attr('data-uploader') ].destroy();
-        });
-        //传对象，初始化调用
-        var opt = $.extend({}, defaults, args[0]);
-        opt.fileTypeExts = opt.fileTypeExts.replace(/ /g, '');
-        //即使配置了高级模式，不支持的话也要降级
-        if (!Uploader[opt.mode]) opt.mode = 'flash';
-        return this.each(function(){
-            var id = 'uploader_'+ (opt.id || Uploader.guid++);
-            $(this).attr('data-uploader', id);
-            window[id] = new Uploader[opt.mode](id, opt);
-            window[id].create(this);
-        });
+        return this;
     };
     
     

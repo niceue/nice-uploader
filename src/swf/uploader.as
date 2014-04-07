@@ -72,7 +72,7 @@ package
 				for (var n:int = 0; n < descriptions.length; n++)
 					filter.push( new FileFilter(descriptions[n], '*.' + extensions[n].replace(/,/g, ';*.')) );
 			}
-			if (param.multi) {
+			if (param.multiple) {
 				fileRefList = new FileReferenceList();
 				fileRefList.addEventListener(Event.SELECT, triggerJS);
 				fileRefList.addEventListener(Event.CANCEL, triggerJS);
