@@ -518,9 +518,12 @@
                     data = new FormData();
                     data.append(opt.name, file);
                     if (opt.formData) {
-                        $.each(opt.formData, function(key, val){
-                            data.append(key, val);
-                        });
+                        $.each(
+                            $.isFunction(opt.formData) ? opt.formData() : opt.formData,
+                            function(key, val){
+                                data.append(key, val);
+                            }
+                        );
                     }
 
                     xhr = _getXHR.call(me);
@@ -717,7 +720,7 @@
                 if (opt.multiple) params.multiple = 1;
                 if (opt.debug) params.debug = 1;
                 if (opt.method) params.method = opt.method;
-                if (opt.formData) params.formData = $.param(opt.formData);
+                if (opt.formData) params.formData = $.param( $.isFunction(opt.formData) ? opt.formData() : opt.formData );
                 this.init( _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
                 
             },
