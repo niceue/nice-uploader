@@ -15,7 +15,7 @@
 .upload-queue .f-progress {width:100px;}
 .upload-queue .f-size {width:60px;}
 .upload-queue .f-operate {float:right;padding-right:0;}
-.upload-queue .f-operate a {padding:0 5px; color:#333; text-decoration:none;font-size:18px; font-family:'Microsoft Yahei',Tahoma}
+.upload-queue .f-operate a {padding:0 5px; color:#333; text-decoration:none;font-size:16px; font-family:'Microsoft Yahei',Tahoma}
 .upload-queue .f-operate a:hover {color:#d00;}
 
 /*进度条*/
