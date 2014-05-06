@@ -11,7 +11,7 @@ Include resources:
 
 Initialization：
 ``` js
-$(element).uploader({
+$("#upload_btn").uploader({
     action: 'upload.php',
     onSuccess: function(){
         //do something..
@@ -48,6 +48,17 @@ $(element).uploader({
 - `onMouseOut`: noop
 - `onMouseClick`: noop
 - `onAddQueue`: default function
+- 
+
+Begin upload 
+$("#upload_btn").uploader("start");
+
+Cancel upload first file
+$("#upload_btn").uploader("cancel", 0);
+
+Cancel upload all files
+$("#upload_btn").uploader("cancel", "*");
+
 
 ### Dependencies
 [jQuery 1.7+](http://jquery.com)
