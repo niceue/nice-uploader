@@ -22,6 +22,29 @@ $(element).uploader({
 ### Documention
 [简体中文](http://niceue.com/uploader/)
 
+### API
+`mode`: "html5"
+`action`: ""
+`name`: "file"
+`formData`: null
+`multiple`: false
+`auto`: true
+`showQueue`: false
+`fileSizeLimit`: 0
+`fileTypeDesc`: ""
+`fileTypeExts`: "html5"
+`onInit`: noop
+`onClearQueue`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+`mode`: noop
+
 ### Dependencies
 [jQuery 1.7+](http://jquery.com)
 
