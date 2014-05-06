@@ -48,16 +48,16 @@ $("#upload_btn").uploader({
 - `onMouseOut`: noop
 - `onMouseClick`: noop
 - `onAddQueue`: default function
-- 
+
 
 Begin upload 
-$("#upload_btn").uploader("start");
+`$("#upload_btn").uploader("start");`
 
-Cancel upload first file
-$("#upload_btn").uploader("cancel", 0);
+Cancel upload first file 
+`$("#upload_btn").uploader("cancel", 0);`
 
-Cancel upload all files
-$("#upload_btn").uploader("cancel", "*");
+Cancel upload all files 
+`$("#upload_btn").uploader("cancel", "*");`
 
 
 ### Dependencies
