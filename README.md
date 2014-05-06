@@ -33,7 +33,7 @@ $("#upload_btn").uploader({
 - `showQueue`: false
 - `fileSizeLimit`: 0
 - `fileTypeDesc`: ""
-- `fileTypeExts`: "html5"
+- `fileTypeExts`: ""
 - `onInit`: noop
 - `onClearQueue`: noop
 - `onSelected`: noop
