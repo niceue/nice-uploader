@@ -27,9 +27,12 @@ $("#upload_btn").uploader({
 - `mode`: "html5"
 - `action`: ""
 - `name`: "file"
-- `formData`: null
+- `formData`: null  
+  Object or function return as object
 - `multiple`: false
-- `auto`: true
+  File multiple choice
+- `auto`: true  
+  Whether to automatically upload
 - `showQueue`: false
 - `fileSizeLimit`: 0
 - `fileTypeDesc`: ""
