@@ -50,13 +50,13 @@ $("#upload_btn").uploader({
 - `onAddQueue`: default function
 
 
-#### Begin upload 
+##### Begin upload 
 `$("#upload_btn").uploader("start");`
 
-#### Cancel upload first file 
+##### Cancel upload first file 
 `$("#upload_btn").uploader("cancel", 0);`
 
-#### Cancel upload all files 
+##### Cancel upload all files 
 `$("#upload_btn").uploader("cancel", "*");`
 
 
