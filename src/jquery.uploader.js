@@ -597,11 +597,16 @@
      * @extend Uploader
      */
     defaults.swf = (function(){
-        var src = $('script[src*="uploader."]').attr('src'),
+        // 正常情况下，在页面加载时，当前js文件的script标签始终是最后一个
+        var scripts = document.getElementsByTagName( 'script' ),           
+            script = scripts[ scripts.length - 1 ],
+            src = script.getAttribute('src'),
             path;
+
         if (src === undefined) src = '';
         path = src.split('/').slice(0, -1).join('/');
         if (path) path += '/';
+
         return  path + 'uploader.swf';
     })();
     Uploader.flash = Uploader.extend(function(){
@@ -720,13 +725,16 @@
                 if (opt.multiple) params.multiple = 1;
                 if (opt.debug) params.debug = 1;
                 if (opt.method) params.method = opt.method;
-                if (opt.formData) params.formData = $.param( $.isFunction(opt.formData) ? opt.formData() : opt.formData );
                 this.init( _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
-                
             },
             
             upload: function(id){
-                this.validId(id) && this.browse.startUpload(''+id);
+                var me = this,
+                    opt = me.options;
+                if (opt.formData) {
+                    me.browse.setData( $.param( $.isFunction(opt.formData) ? opt.formData() : opt.formData ) );
+                }
+                me.validId(id) && me.browse.startUpload(''+id);
             },
             
             /**

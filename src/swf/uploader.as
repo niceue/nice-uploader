@@ -42,7 +42,7 @@ package
 			ExternalInterface.addCallback("startUpload",  startUpload);
 			ExternalInterface.addCallback("cancelUpload", cancelUpload);
 			//ExternalInterface.addCallback("getFile",    getFile);
-			//ExternalInterface.addCallback("setData",    setData);
+			ExternalInterface.addCallback("setData",    setData);
 			
 			if (!param.formData) param.formData = '';
 		}
@@ -99,7 +99,7 @@ package
             req.method = (param.method && param.method === "GET") ? URLRequestMethod.GET : URLRequestMethod.POST;
             
             vars = new URLVariables();
-			if (param.formData != '') vars.decode(unescape(param.formData));
+			if (param.formData != '') vars.decode(decodeURIComponent(param.formData));
             req.data = vars;
 
 			file = getFileRef(id);
@@ -148,9 +148,9 @@ package
 			return ret;
         }
 
-		/*public function setData(data:String):void {
+		public function setData(data:String):void {
 			param.formData = data;
-		}*/
+		}
 
 		private function validId(id:String):Boolean {
 			return id in files;
