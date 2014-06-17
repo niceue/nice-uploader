@@ -665,7 +665,8 @@
                 //对于IE，加上codebase参数才可以在没有安装flash的情况下自动提示安装ActiveX控件
                 attr.codebase = "http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,28,0";
                 //IE6-8必须同时设置data属性和src参数(或者movie参数)
-                attr.data = url;
+                //attr.data = url;
+                attr.classid = "clsid:d27cdb6e-ae6d-11cf-96b8-444553540000";
                 html += '<object' + obj2attr(attr) + '>';
                 for (var key in param) {
                     html+='<param name="'+ key +'" value="'+ param[key] +'">';
