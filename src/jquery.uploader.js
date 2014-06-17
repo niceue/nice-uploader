@@ -243,20 +243,21 @@
                 this.id = id;
                 this.options = options;
                 this.element = element;
-                this.create();
+                this.init();
                 window[id] = this;
             },
 
             //初始化
-            init: function(str){
+            init: function(){
                 var me = this,
                     $el =$(me.element),
                     opt = me.options,
                     width = $el.outerWidth(),
+                    height = $el.outerHeight(),
                     left = $el.css('left'),
                     top = $el.css('top'),
                     marginRight = parseInt($el.css('marginRight')),
-                    style = 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;margin-left:-'+ (width+marginRight) +'px;left:'+left+';top:'+top+';';
+                    style = 'width:'+ width +'px;height:'+ height +'px;margin-left:-'+ (width+marginRight) +'px;left:'+left+';top:'+top+';';
 
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
@@ -266,7 +267,7 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                me.$browseEl = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ str +'</div></span>');
+                me.$browseEl = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ me.create(width, height) +'</div></span>');
                 $el.after(me.$browseEl);
                 me.$el = $el;
                 me.browse = $('#'+me.id)[0];
@@ -452,7 +453,7 @@
                 me.queue = [];
                 me.loadId = 0;
                 me.loadFile = null;
-                me.browse.style.display = '';
+                me.browse.style.display = 'block';
                 Uploader.uploading = false;
                 me.options.onAllComplete.call(me);
             },
@@ -503,9 +504,8 @@
                     this.__super('__construct');
                 },*/
 
-                create: function(){
-                    var str = '<input type="file" id="'+ this.id +'" class="uploader" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
-                    this.init(str);
+                create: function(width, height){
+                    return '<input type="file" id="'+ this.id +'" class="uploader" style="width:'+width+'px;height:'+height+'px" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
                 },
                 
                 upload: function(id){
@@ -706,7 +706,7 @@
                 this.__super('__construct');
             },*/
             
-            create: function(){
+            create: function(width, height){
                 var opt = this.options,
                     params = {
                         id: this.id,
@@ -724,7 +724,14 @@
                 if (opt.multiple) params.multiple = 1;
                 if (opt.debug) params.debug = 1;
                 if (opt.method) params.method = opt.method;
-                this.init( _embedSWF({src:opt.swf, 'id':this.id, 'class':'uploader', flashvars:$.param(params)}) );
+                return _embedSWF({
+                    src: opt.swf,
+                    width: parseInt(width),
+                    height: parseInt(height),
+                    'id': this.id,
+                    'class': 'uploader',
+                    flashvars: $.param(params)
+                });
             },
             
             upload: function(id){
