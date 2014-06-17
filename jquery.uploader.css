@@ -1,7 +1,13 @@
 /*代理的按钮*/
-.upload-el {position:relative;display: inline-block;line-height: 0;vertical-align: top; outline: 0;}
-.upload-el div {position:absolute;overflow:hidden;}
-.upload-el .uploader {position:absolute; left:0; top:0; margin:0; padding:0;border:0; cursor: pointer;font-size:200px; filter:alpha(opacity=0); opacity:0;}
+.upload-el {position:relative; display:inline-block; line-height:0; vertical-align:top; outline:0;}
+.upload-el .uploader {
+    position:absolute; left:0; top:0;
+    margin:0; padding:0; border:0;
+    cursor: pointer;
+    font-size:200px;
+    filter:alpha(opacity=0); opacity:0;
+    overflow: hidden;
+}
 
 /*队列*/
 .upload-queue {zoom:1}
@@ -20,10 +26,7 @@
 
 /*进度条*/
 .upload-progress {
-	position:absolute;
-	top:0;
-	left:0;
-	z-index:1;
+	position:absolute; top:0; left:0; z-index:1;
 	height:24px;
 	overflow:hidden;
 	background:#B4D9FC;
