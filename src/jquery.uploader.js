@@ -267,7 +267,7 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                me.$browseEl = $('<span class="upload-el"><div class="upload-btn-wrap" style="'+ style +'">'+ me.create(width, height) +'</div></span>');
+                me.$browseEl = $('<span class="upload-el">'+ me.create(style) +'</span>');
                 $el.after(me.$browseEl);
                 me.$el = $el;
                 me.browse = $('#'+me.id)[0];
@@ -504,8 +504,8 @@
                     this.__super('__construct');
                 },*/
 
-                create: function(width, height){
-                    return '<input type="file" id="'+ this.id +'" class="uploader" style="width:'+width+'px;height:'+height+'px" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
+                create: function(style){
+                    return '<input type="file" id="'+ this.id +'" class="uploader" style="'+ style +'" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
                 },
                 
                 upload: function(id){
@@ -706,7 +706,7 @@
                 this.__super('__construct');
             },*/
             
-            create: function(width, height){
+            create: function(style){
                 var opt = this.options,
                     params = {
                         id: this.id,
@@ -726,8 +726,7 @@
                 if (opt.method) params.method = opt.method;
                 return _embedSWF({
                     src: opt.swf,
-                    width: parseInt(width),
-                    height: parseInt(height),
+                    style: style,
                     'id': this.id,
                     'class': 'uploader',
                     flashvars: $.param(params)
