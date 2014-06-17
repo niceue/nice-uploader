@@ -255,10 +255,9 @@
                     width = $el.outerWidth(),
                     left = $el.css('left'),
                     top = $el.css('top'),
-                    style = 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;margin-left:-'+ width +'px;';
+                    marginRight = parseInt($el.css('marginRight')),
+                    style = 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;margin-left:-'+ (width+marginRight) +'px;left:'+left+';top:'+top+';';
 
-                if (left) style += 'left:'+left+';';
-                if (top) style += 'top:'+top+';';
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
                         me.$queue = $(opt.showQueue).addClass('upload-queue');
@@ -603,7 +602,7 @@
             src = script.getAttribute('src'),
             path;
 
-        if (src === undefined) src = '';
+        if (!src) src = '';
         path = src.split('/').slice(0, -1).join('/');
         if (path) path += '/';
 
