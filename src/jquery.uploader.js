@@ -253,11 +253,10 @@
                     $el =$(me.element),
                     opt = me.options,
                     width = $el.outerWidth(),
-                    height = $el.outerHeight(),
-                    left = $el.css('left'),
-                    top = $el.css('top'),
-                    marginRight = parseInt($el.css('marginRight')),
-                    style = 'width:'+ width +'px;height:'+ height +'px;margin-left:-'+ (width+marginRight) +'px;left:'+left+';top:'+top+';';
+                    style = 'position:absolute;margin:0;padding:0;border:0;cursor:pointer;font-size:200px;filter:alpha(opacity=0);opacity:0;overflow:hidden;';
+                    
+                style += 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;';
+                style += 'margin-left:-'+ (width + parseInt($el.css('marginRight'))) +'px;left:'+ $el.css('left') +';top:'+ $el.css('top') +';';
 
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
@@ -267,7 +266,7 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                me.$browseEl = $('<span class="upload-el">'+ me.create(style) +'</span>');
+                me.$browseEl = $('<span class="upload-el" style="position:relative;line-height:0;vertical-align:top;">'+ me.create(style) +'</span>');
                 $el.after(me.$browseEl);
                 me.$el = $el;
                 me.browse = $('#'+me.id)[0];
@@ -518,7 +517,7 @@
                     data.append(opt.name, file);
                     if (opt.formData) {
                         $.each(
-                            $.isFunction(opt.formData) ? opt.formData() : opt.formData,
+                            $.isFunction(opt.formData) ? opt.formData.call(me) : opt.formData,
                             function(key, val){
                                 data.append(key, val);
                             }
@@ -632,9 +631,7 @@
             var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' +  PREVENT_CACHE,
                 html = '',
                 attr = {
-                    type: 'application/x-shockwave-flash',
-                    width: '100%',
-                    height: '100%'
+                    type: 'application/x-shockwave-flash'
                 },
                 param = {
                     wmode: 'transparent',
@@ -738,7 +735,7 @@
                 var me = this,
                     opt = me.options;
                 if (opt.formData) {
-                    me.browse.setData( $.param( $.isFunction(opt.formData) ? opt.formData() : opt.formData ) );
+                    me.browse.setData( $.param( $.isFunction(opt.formData) ? opt.formData.call(me) : opt.formData ) );
                 }
                 me.validId(id) && me.browse.startUpload(''+id);
             },
