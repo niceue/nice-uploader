@@ -253,10 +253,10 @@
                     $el =$(me.element),
                     opt = me.options,
                     width = $el.outerWidth(),
-                    style = 'position:absolute;margin:0;padding:0;border:0;cursor:pointer;font-size:200px;filter:alpha(opacity=0);opacity:0;overflow:hidden;';
-                    
-                style += 'width:'+ width +'px;height:'+ $el.outerHeight() +'px;';
-                style += 'margin-left:-'+ (width + parseInt($el.css('marginRight'))) +'px;left:'+ $el.css('left') +';top:'+ $el.css('top') +';';
+                    height = $el.outerHeight(),
+                    wh = 'width:'+ width +'px;height:'+ height +'px;',
+                    pos = 'margin-left:-'+ (width + parseInt($el.css('marginRight'))) +'px;left:'+ $el.css('left') +';top:0;',
+                    style = 'position:absolute;margin:0;padding:0;border:0;cursor:pointer;font-size:200px;filter:alpha(opacity=0);opacity:0;';
 
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
@@ -266,7 +266,12 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                me.$browseEl = $('<span class="upload-el" style="position:relative;line-height:0;vertical-align:top;">'+ me.create(style) +'</span>');
+                me.$browseEl = $(
+                    '<span class="upload-el" style="position:relative;line-height:0;font-size:0;vertical-align:top;">'+
+                    '<span style="position:absolute;overflow:hidden;'+ wh + pos +'">' +
+                    me.create(style + wh) +
+                    '</span></span>'
+                    );
                 $el.after(me.$browseEl);
                 me.$el = $el;
                 me.browse = $('#'+me.id)[0];
@@ -377,7 +382,7 @@
                 e = new _ProgressEvent(e, 'loadstart', file);
                 file._t = e.timeStamp-1;
                 file._l = 0;
-                me.browse.style.display = 'none';
+                //me.browse.style.display = 'none';
                 Uploader.uploading = true;
                 me.options.onStart.call(me, e);
             },
@@ -452,7 +457,7 @@
                 me.queue = [];
                 me.loadId = 0;
                 me.loadFile = null;
-                me.browse.style.display = 'block';
+                //me.browse.style.display = 'block';
                 Uploader.uploading = false;
                 me.options.onAllComplete.call(me);
             },
