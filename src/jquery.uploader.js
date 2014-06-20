@@ -779,6 +779,7 @@
         
         $body.on('input change.' + NS, ':file.'+NS, function(){
             window[this.id].onSelected(this.files);
+            this.value = '';
         }).on('click.' + NS, ':file.'+NS, function(){
             window[this.id].onMouseClick();
         });
