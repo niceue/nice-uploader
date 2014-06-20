@@ -208,7 +208,7 @@
         }
         //验证是否接受某类型
         function _acceptType(name){
-            var type = name.substr( name.lastIndexOf('.') + 1 );
+            var type = name.substr( name.lastIndexOf('.') + 1 ).toLowerCase();
             return this.acceptExts[type];
         }
         //计算上传速度
@@ -509,7 +509,7 @@
                 },*/
 
                 create: function(style){
-                    return '<input type="file" id="'+ this.id +'" class="uploader" style="'+ style +'" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
+                    return '<input type="file" id="'+ this.id +'" title="" class="uploader" style="'+ style +'" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
                 },
                 
                 upload: function(id){
