@@ -827,7 +827,7 @@
     function parseSize(size) {
         var unit = {k:1024, m:1048576, g:1073741824}, arr;
         if (typeof size === 'string') {
-            arr = /^([0-9]+)([mgk]+)$/.exec(size.toLowerCase().replace(/[^0-9mkg]/g, ''));
+            arr = /([0-9\.]+)([mgk])/.exec(size.toLowerCase());
             size = +arr[1];
             size *= unit[arr[2]];
         }
