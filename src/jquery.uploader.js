@@ -255,8 +255,8 @@
                     width = $el.outerWidth(),
                     height = $el.outerHeight(),
                     wh = 'width:'+ width +'px;height:'+ height +'px;',
-                    pos = 'margin-left:-'+ (width + parseInt($el.css('marginRight'))) +'px;left:'+ $el.css('left') +';top:0;',
-                    style = 'position:absolute;margin:0;padding:0;border:0;cursor:pointer;font-size:200px;filter:alpha(opacity=0);opacity:0;';
+                    pos = 'z-index:' + $el.css("z-index") + ';',
+                    style = 'margin:0;padding:0;border:0;cursor:pointer;font-size:200px;filter:alpha(opacity=0);opacity:0;';
 
                 if (opt.showQueue) {
                     if (typeof opt.showQueue === 'string') {
@@ -266,11 +266,13 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
+                pos += 'margin-left:-'+ (width + 0^parseInt($el.css('margin-right')) + 0^parseInt($el.css('left'))) +'px;';
+                pos += 'margin-top:'+ (0^parseInt($el.css('margin-top')) + 0^parseInt($el.css('top'))) +'px;';
+
                 me.$browseEl = $(
-                    '<span class="upload-el" style="position:relative;line-height:0;font-size:0;vertical-align:top;">'+
-                    '<span style="position:absolute;overflow:hidden;'+ wh + pos +'">' +
+                    '<span class="upload-el" style="position:absolute;overflow:hidden;'+ wh + pos +'">' +
                     me.create(style + wh) +
-                    '</span></span>'
+                    '</span>'
                     );
                 $el.after(me.$browseEl);
                 me.$el = $el;
@@ -486,10 +488,18 @@
      */
     if (!!(window.FormData && (new XMLHttpRequest()).upload)) {
         Uploader.html5 = Uploader.extend(function(){
-            var map = {loadstart:'onStart', progress:'onProgress', error:'onError', load:'onSuccess', loadend:'onComplete'};
+            var map = {
+                    loadstart:'onStart',
+                    progress:'onProgress',
+                    error:'onError',
+                    load:'onSuccess',
+                    loadend:'onComplete'
+                };
 
             function _getAccept(){
-                var arr = [], exts = this.options.fileTypeExts.replace('|', ',').split(','), i, len = exts.length, ext;
+                var arr = [],
+                    exts = this.options.fileTypeExts.replace('|', ',').split(','),
+                    i, len = exts.length, ext;
                 if (len) {
                     for (i=0; i<len; i++) {
                         ext = exts[i];
@@ -504,12 +514,13 @@
             }
             
             return {
-                /*__construct: function(){
-                    this.__super('__construct');
-                },*/
 
                 create: function(style){
-                    return '<input type="file" id="'+ this.id +'" title="" class="uploader" style="'+ style +'" accept="'+ _getAccept.call(this) +'"'+ (this.options.multiple ? ' multiple':'') +'>';
+                    return '<input type="file" title="" class="uploader"' +
+                        ' id="'+ this.id +'"' +
+                        ' style="'+ style +'"' +
+                        ' accept="'+ _getAccept.call(this) +'"' +
+                        (this.options.multiple ? ' multiple':'') +'>';
                 },
                 
                 upload: function(id){
@@ -614,19 +625,6 @@
     })();
     Uploader.flash = Uploader.extend(function(){
         var isIE = !!window.ActiveXObject,
-            /*swfVersion = (function(){
-                var ver, SF = 'ShockwaveFlash', plug;
-                if (isIE) {
-                    try {
-                        ver = new ActiveXObject(SF + '.' + SF).GetVariable('$version');
-                        ver = ver.split(' ')[1].split(',')[0];
-                    } catch(ex) {}
-                } else {
-                    plug = navigator.plugins['Shockwave Flash'];
-                    if (typeof plug === 'object') ver = plug.description.split(' ')[2];
-                }
-                return parseInt(ver, 10);
-            })(),*/
             PREVENT_CACHE = +new Date();
         
         //生成Flash的HTML(只有src是必传的参数)
@@ -635,10 +633,10 @@
 
             var url = opt.src + (opt.src.indexOf('?') !== -1 ? '&' : '?') + '__=' +  PREVENT_CACHE,
                 html = '',
-                attr = {
+                attrs = {
                     type: 'application/x-shockwave-flash'
                 },
-                param = {
+                params = {
                     wmode: 'transparent',
                     allowScriptAccess: 'always'
                 },
@@ -656,29 +654,27 @@
                 }
                 for (key in opt) {
                     if (obj[key]) {
-                        attr[key] = opt[key];
+                        attrs[key] = opt[key];
                     } else {
-                        param[key] = opt[key];
+                        params[key] = opt[key];
                     }
                 }
             })('width height id class style'.split(' '));
-            param.src = url;
+            params.src = url;
             if (isIE) {
                 //对于IE，加上codebase参数才可以在没有安装flash的情况下自动提示安装ActiveX控件
-                attr.codebase = "http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,28,0";
-                //IE6-8必须同时设置data属性和src参数(或者movie参数)
-                //attr.data = url;
-                attr.classid = "clsid:d27cdb6e-ae6d-11cf-96b8-444553540000";
-                html += '<object' + obj2attr(attr) + '>';
-                for (var key in param) {
-                    html+='<param name="'+ key +'" value="'+ param[key] +'">';
+                attrs.codebase = "http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,28,0";
+                attrs.classid = "clsid:d27cdb6e-ae6d-11cf-96b8-444553540000";
+                html += '<object' + obj2attr(attrs) + '>';
+                for (var key in params) {
+                    html+='<param name="'+ key +'" value="'+ params[key] +'">';
                 }
                 html += '</object>';
                 
             //现代浏览器用embed方式更好(Safari用object装载flash存在很多问题)
             } else {
                 //Chrome自带flash10.0，Firefox、Opera、Safari会自动提示用户安装，所以对于现代浏览器pluginpage参数不用设置
-                html += '<embed' + obj2attr(param) + obj2attr(attr) + '>';
+                html += '<embed' + obj2attr(params) + obj2attr(attrs) + '>';
             }
             return html;
         }
@@ -705,9 +701,6 @@
         }
         
         return {
-            /*__construct: function(){
-                this.__super('__construct');
-            },*/
             
             create: function(style){
                 var opt = this.options,
