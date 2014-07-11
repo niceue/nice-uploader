@@ -804,12 +804,12 @@
      * @return {String} 文件尺寸，如"100kb"
      */
     function stringifySize(bytes){
-        var i = -1;
+        var i = 0;
         while (bytes > 1000) {
             bytes = bytes / 1024;
             i++;
         }
-        return Math.max(bytes, 0.1).toFixed(1) + ['KB', 'M', 'G', 'T'][i];
+        return Math.max(bytes, 0.1).toFixed(1) + ['B', 'KB', 'M', 'G', 'T'][i];
     }
     
     /**
