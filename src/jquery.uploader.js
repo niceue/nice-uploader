@@ -345,9 +345,8 @@
                     opt = me.options,
                     f,
                     acceptExts = opt.fileTypeExts.split('|').join(','),
-                    sizeLimit = parseSize(opt.fileSizeLimit),
-                    queueHTML = '',
-                    len = fileList.length;
+                    sizeLimit = parseSize(opt.fileSizeLimit);
+
                 me.queue = [];
                 me.files = {};
                 $.each(fileList, function(i, file){
@@ -364,15 +363,19 @@
                     }
                     me.files[i] = file;
                     me.queue[i] = f;
-                    if (me.$queue) {
-                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (_err ? ' upload-error' : '') +'" id="'+ me.id + '___' + i +'">';
-                        queueHTML += opt.onAddQueue.call(me, file, _err) + '</div>';
-                    }
                 });
+
+                if (opt.onSelected.call(this, me.queue) === false) return;
                 if (me.$queue) {
+                    var queueHTML = '',
+                        len = me.queue.length;
+                    $.each(me.queue, function(i, f) {
+                        queueHTML += '<div class="queue'+ (i+1===len ? ' last-queue' : '') + (f.error ? ' upload-error' : '') +'" id="'+ me.id + '___' + i +'">';
+                        queueHTML += opt.onAddQueue.call(me, f, f.error) + '</div>';
+                    });
                     me.$queue.html( queueHTML );
                 }
-                if ( opt.onSelected.call(this, me.queue) !== false && opt.auto ) me.start();
+                if (opt.auto) me.start();
             },
             
             onStart: function(e){
