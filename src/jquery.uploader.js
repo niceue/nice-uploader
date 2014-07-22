@@ -365,7 +365,7 @@
                     me.queue[i] = f;
                 });
 
-                if (opt.onSelected.call(this, me.queue) === false) return;
+                if (opt.onSelected.call(me, me.queue) === false) return;
                 if (me.$queue) {
                     var queueHTML = '',
                         len = me.queue.length;
