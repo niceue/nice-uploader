@@ -399,7 +399,7 @@
                 e = new _ProgressEvent(e, 'progress', file);
                 if (e.lengthComputable) {
                     e.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
-                    if (me.$queue) _showProgress.call(me,  ((e.loaded / e.total) * 100).toFixed(1) + '%' );
+                    if (me.$queue) _showProgress.call(me,  Math.round(e.loaded * 100 / e.total).toFixed(1) + '%' );
                     file._t = e.timeStamp;
                     file._l = e.loaded;
                 }
