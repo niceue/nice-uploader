@@ -213,7 +213,8 @@
         }
         //计算上传速度
         function _getSpeed(diffLoaded, diffTime){
-            return stringifySize( diffLoaded * 1000 / diffTime ) + '/s';
+            console.log(arguments)
+            return stringifySize( diffLoaded * 1000 / diffTime ) + '/S';
         }
         //显示上传进度
         function _showProgress(percent){
