@@ -213,7 +213,7 @@
         }
         //计算上传速度
         function _getSpeed(diffLoaded, diffTime){
-            return stringifySize( diffLoaded * 1000 / diffTime ) + '/S';
+            return stringifySize( diffLoaded * 1000 / diffTime ) + '/s';
         }
         //显示上传进度
         function _showProgress(percent){
@@ -806,12 +806,13 @@
      * @return {String} 文件尺寸，如"100kb"
      */
     function stringifySize(bytes){
-        var i = 0;
-        while (bytes > 1024) {
+        var i = -1;
+        do {
             bytes = bytes / 1024;
             i++;
-        }
-        return Math.max(bytes, 0.1).toFixed(1) + ['B', 'KB', 'M', 'G', 'T'][i];
+        } while (bytes > 1024);
+
+        return Math.max(bytes, 0.01).toFixed(2) + ['KB', 'M', 'G', 'T'][i];
     }
     
     /**
