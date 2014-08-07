@@ -163,7 +163,7 @@
         function _ProgressEvent(e, type, file){
             var isProgress = type === 'progress';
             this.type = type;
-            this.timeStamp = e && e.timeStamp || +new Date();
+            this.timeStamp = +new Date();
             this.loaded = isProgress ? e.loaded : 0;
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
@@ -213,7 +213,6 @@
         }
         //计算上传速度
         function _getSpeed(diffLoaded, diffTime){
-            console.log(arguments)
             return stringifySize( diffLoaded * 1000 / diffTime ) + '/S';
         }
         //显示上传进度
@@ -616,7 +615,7 @@
      */
     defaults.swf = (function(){
         // 正常情况下，在页面加载时，当前js文件的script标签始终是最后一个
-        var scripts = document.getElementsByTagName( 'script' ),           
+        var scripts = document.getElementsByTagName( 'script' ),
             script = scripts[ scripts.length - 1 ],
             src = script.getAttribute('src'),
             path;
@@ -807,12 +806,12 @@
      * @return {String} 文件尺寸，如"100kb"
      */
     function stringifySize(bytes){
-        var i = -1;
-        while (bytes > 1000) {
+        var i = 0;
+        while (bytes > 1024) {
             bytes = bytes / 1024;
             i++;
         }
-        return Math.max(bytes, 0.1).toFixed(1) + ['KB', 'M', 'G', 'T'][i];
+        return Math.max(bytes, 0.1).toFixed(1) + ['B', 'KB', 'M', 'G', 'T'][i];
     }
     
     /**
