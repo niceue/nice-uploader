@@ -352,6 +352,7 @@
                 $.each(fileList, function(i, file){
                     var _err;
                     f = new _File(+i, file);
+                    file.id = f.id;//flash模式自带id，html5没有id，这里直接设置id即可
                     if (me.acceptExts !== '*' && !_acceptType.call(me, file.name)) { //排除不允许的文件类型
                         me.onError( {code: 601, params: [acceptExts]}, false );
                         return;
