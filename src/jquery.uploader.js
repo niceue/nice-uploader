@@ -190,6 +190,7 @@
                         f.type.length < 6 ? mimes[f.type] :
                         f.type; //文件后缀最长5字符
             this.lastModifiedDate = new Date(+f.lastModifiedDate);
+            this.originalFile = f;
             if (f.error) this.error = f.error;
         }
         //包装异常
