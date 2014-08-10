@@ -790,6 +790,7 @@
         var $body = $('body');
         
         $body.on('change.' + NS, ':file.'+NS, function(){
+            if (!this.value) return;
             window[this.id].onSelected(this.files);
             this.value = '';
         }).on('click.' + NS, ':file.'+NS, function(){
