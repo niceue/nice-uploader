@@ -161,9 +161,19 @@
         
         //进度事件
         function _ProgressEvent(e, type, file){
-            var isProgress = type === 'progress';
+            var isProgress = type === 'progress',
+                timeStamp;
+
+            if (e && e.timeStamp) {
+                timeStamp = e.timeStamp;
+                if (String(timeStamp).length > 13) {
+                    timeStamp = +String(timeStamp).substr(0,13);
+                }
+            } else {
+                timeStamp = +new Date();
+            }
+            this.timeStamp = timeStamp;
             this.type = type;
-            this.timeStamp = +new Date();
             this.loaded = isProgress ? e.loaded : 0;
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
@@ -352,7 +362,7 @@
                 $.each(fileList, function(i, file){
                     var _err;
                     f = new _File(+i, file);
-                    file.id = f.id;//flash模式自带id，html5没有id，这里直接设置id即可
+                    file.id = i; //flash模式自带id，html5没有id，这里直接设置id即可
                     if (me.acceptExts !== '*' && !_acceptType.call(me, file.name)) { //排除不允许的文件类型
                         me.onError( {code: 601, params: [acceptExts]}, false );
                         return;
