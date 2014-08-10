@@ -43,7 +43,7 @@
             //添加队列事件（可自定义队列）
             onAddQueue: function(file, err){
                 var html = '<ul>\
-                    <li class="f-name">'+ getShortName(file.name, 32) +'</li>\
+                    <li class="f-name" title="'+ file.name +'">'+ getShortName(file.name, 32) +'</li>\
                     <li class="f-size">'+ stringifySize(file.size) +'</li>\
                     <li class="f-progress">'+ (err ? err.name : '') +'</li>\
                     <li class="f-operate"><a href="#" class="upload-cancel">&times;</a></li>\
