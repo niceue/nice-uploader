@@ -231,6 +231,7 @@ package
 				case Event.OPEN:
 					callback = UPLOAD_START;
                     ret.type  = 'loadstart';
+					ret.lengthComputable = false;
                     ret.loaded = 0;
                     ret.total = 0;
                     ret.timeStamp = (new Date()).getTime();
@@ -247,7 +248,7 @@ package
 
                 case DataEvent.UPLOAD_COMPLETE_DATA:
 					callback  = UPLOAD_SUCCESS;
-					ret = e.data.replace(/\\/g, "\\\\");
+					ret.data = e.data.replace(/\\/g, "\\\\");
 					delete files[id];
 					active = "";
                     if (objSize(files) === 0) {
@@ -295,9 +296,9 @@ package
 			}
 			callJS(callback, ret);
             
-            /*if (param.debug) {
+            if (param.debug) {
                 if (ret) debug(callback, ret);
-            }*/
+            }
 		}
 		
 		private function objSize(obj:Object):Number {
@@ -311,7 +312,7 @@ package
             ExternalInterface.call(param.id + "." + type, o);
         }
         
-        /*
+        
         private function log(o:Object):void {
             ExternalInterface.call("console.log", o);
         }
@@ -319,6 +320,6 @@ package
         private function debug(type:String, o:*):void {
             log('Flash >>> ' + type + ':')
             log(o);
-        }*/
+        }
 	}
 }
