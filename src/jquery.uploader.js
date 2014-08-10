@@ -20,7 +20,8 @@
             fileSizeLimit: 0,                 //文件大小限制（'100kb' '5M' 等）
             fileTypeDesc: '',                 //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
             fileTypeExts: '',                 //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,png,gif'）
-            
+            maxChunkSize: 512 * 1000,         //0.5MB
+
             //上传事件（如果有事件参数，则包含event.file）
             onInit: noop,                     //初始化完成 ()
             onClearQueue: noop,               //清空队列 ()
@@ -177,9 +178,9 @@
             this.loaded = isProgress ? e.loaded : 0;
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
-            this.file = file;
-            // 原生HTML5事件
-            this.originalEvent = e;
+            this.file = file || e.file;
+            if (isProgress) this.originalEvent = e;
+            if (e.data) this.data = e.data;
         }
         //文件接口
         function _File(id, f){
@@ -206,7 +207,9 @@
                 e.name = e.name || obj[code] || 'HTTP Error';
                 e.message = e.message || code;
             }
-            if (e.file) this.file = e.file;
+            if (e.file) {
+                this.file = e.file;
+            }
             this.type = 'error';
             this.name = i18n(e.name || 'Error');
             this.message = e.params ? i18n.apply( null, [e.message].concat(e.params) ) : i18n(e.message);
@@ -229,8 +232,8 @@
             return stringifySize( diffLoaded * 1000 / diffTime ) + '/s';
         }
         //显示上传进度
-        function _showProgress(percent){
-            var $queue = $('#'+ this.id +'___'+ this.loadId),
+        function _showProgress(file, percent){
+            var $queue = $('#'+ this.id +'___'+ file.id),
                 $el = $queue.find('.upload-progress');
             $el.animate({width: percent}, 200);
             $queue.find('.f-progress').text( percent );
@@ -291,6 +294,7 @@
                 me.$el = $el;
                 me.browse = $('#'+me.id)[0];
                 me.queue = [];
+                me.loadIndex = -1;
                 me.acceptExts = (function(str){
                     if (str === '*') return str;
                     var obj = {};
@@ -317,17 +321,25 @@
              *
              * @method start
              */
-            start: function(next){
-                var q = this.queue;
-                if (q.length) {
-                    if ( q[0].error ) {
-                        q.shift();
-                        this.start(true);
+            start: function(){
+                var me = this,
+                    len = me.queue.length,
+                    f;
+
+                // 队列中的位置
+                me.loadIndex++;
+                // 全部上载完成
+                if (me.loadCount === len) {
+                    me.onAllComplete();
+                }
+                // 队列中剩余代传文件
+                else if (me.loadIndex < len) {
+                    f = me.queue[me.loadIndex];
+                    if (f.error || f.abort) {
+                        me.start();
                     } else {
-                        this.upload( q[0].id );
+                        me.upload(f);
                     }
-                } else {
-                    if (next) this.onAllComplete.call(this);
                 }
             },
             
@@ -362,6 +374,8 @@
 
                 me.queue = [];
                 me.files = {};
+                me.loadIndex = -1;
+                me.loadCount = 0;
                 $.each(fileList, function(i, file){
                     var _err;
                     f = new _File(+i, file);
@@ -394,10 +408,8 @@
             
             onStart: function(e){
                 var me = this,
-                    file = me.queue[0];
+                    file = e.file;
 
-                me.loadId = file.id;
-                me.loadFile = file;
                 e = new _ProgressEvent(e, 'loadstart', file);
                 e.originalFile = me.files[file.id];
                 file._t = e.timeStamp-1;
@@ -409,13 +421,13 @@
             
             onProgress: function(e){
                 var me = this,
-                    file = me.loadFile;
+                    file = e.file || me.queue[e.id];
 
                 e = new _ProgressEvent(e, 'progress', file);
                 e.originalFile = me.files[file.id];
                 if (e.lengthComputable) {
                     e.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
-                    if (me.$queue) _showProgress.call(me,  Math.round(e.loaded * 100 / e.total).toFixed(1) + '%' );
+                    if (me.$queue) _showProgress.call(me, file, Math.round(e.loaded * 100 / e.total).toFixed(1) + '%' );
                     file._t = e.timeStamp;
                     file._l = e.loaded;
                 }
@@ -423,15 +435,9 @@
             },
             
             onCancel: function(id){
-                var index;
-                $.each(this.queue, function(i, file){
-                    if (file.id === +id) {
-                        index = i;
-                        return false;
-                    }
-                });
                 this.remove(id);
-                this.options.onCancel.call(this, this.queue.splice(index, 1));
+                this.queue[id].abort = true;
+                this.options.onCancel.call(this, this.queue[id]);
             },
             
             onClearQueue: function(){
@@ -444,7 +450,7 @@
             
             onError: function(e, isComplete){
                 var opt = this.options,
-                    id = e.id || this.loadId || null,
+                    id = e.id || null,
                     f = id ? (e.file || _getFileById.call(this, id)) : null;
                 e.file = f;
                 e = new _Error(e);
@@ -453,33 +459,32 @@
                 }
                 if (id !== null) {
                     if (this.$queue) $('#'+this.id + '___' + id).addClass('upload-error').find('.f-progress').text(e.name);
-                    if (isComplete !== false) this.onComplete();
+                    if (isComplete !== false) this.onComplete(e);
                 }
                 this.options.onError.call(this, e);
             },
             
-            onSuccess: function(data){
-                var e = new _ProgressEvent(null, 'load', this.loadFile);
-                e.data = data;
-                _showProgress.call(this, '100%');
+            onSuccess: function(e){
+                if (!e.file) e.file = this.queue[e.id];
+                e = new _ProgressEvent(e, 'load');
+                _showProgress.call(this, e.file, '100%');
                 this.options.onSuccess.call(this, e);
-                this.onComplete();
+                this.onComplete(e);
             },
             
-            onComplete: function(){
-                var e = new _ProgressEvent(null, 'loadend', this.queue.shift());
+            onComplete: function(e){
+                e = new _ProgressEvent(e, 'loadend');
+                this.loadCount++;
                 this.options.onComplete.call(this, e);
-                this.start(true);
+                this.start();
             },
             
             onAllComplete: function(){
                 var me = this;
-                me.files = {};
-                me.queue = [];
-                me.loadId = 0;
-                me.loadFile = null;
                 //me.browse.style.display = 'block';
                 Uploader.uploading = false;
+                me.files = {};
+                me.queue = [];
                 me.options.onAllComplete.call(me);
             },
                 
@@ -542,11 +547,11 @@
                         (this.options.multiple ? ' multiple':'') +'>';
                 },
                 
-                upload: function(id){
+                upload: function(f){
                     var me = this,
                         opt = me.options, xhr, data, file;
 
-                    file = me.getFile(id);
+                    file = f.originalFile;
                     if (!file) {return;}
                     data = new FormData();
                     data.append(opt.name, file);
@@ -564,9 +569,9 @@
                     xhr.onreadystatechange = function(){
                         if (xhr.readyState === 4) {
                             if (xhr.status === 200) {
-                                me.onSuccess(xhr.responseText);
+                                me.onSuccess({file:f, data:xhr.responseText});
                             } else {
-                                me.onError({code: xhr.status});
+                                me.onError({file:f, code: xhr.status});
                             }
                         }
                     };
@@ -574,6 +579,7 @@
                     xhr.upload.onloadstart =
                     xhr.upload.onprogress =
                     xhr.upload.onerror = function(e) {
+                        e.file = f;
                         me[map[e.type]](e);
                     };
                     
@@ -598,13 +604,12 @@
                     var me = this,
                         queue = me.queue;
 
-                    if (id === '*') {
+                    if (id === undefined || id === '*') {
                         if ( me.xhr && me.xhr.readyState > 0 ) me.xhr.abort();
                         me.onClearQueue();
                     } else {
                         if (!queue.length) {return;}
-                        if (!id) id = queue[0].id;
-                        if ( me.xhr && me.xhr.readyState > 0 && id === me.loadId ) me.xhr.abort();
+                        if ( me.xhr && me.xhr.readyState > 0 && me.queue[id] ) me.xhr.abort();
                         me.onCancel(id);
                     }
                 },
@@ -748,13 +753,13 @@
                 });
             },
             
-            upload: function(id){
+            upload: function(f){
                 var me = this,
                     opt = me.options;
                 if (opt.formData) {
                     me.browse.setData( $.param( $.isFunction(opt.formData) ? opt.formData.call(me) : opt.formData ) );
                 }
-                me.validId(id) && me.browse.startUpload(''+id);
+                me.browse.startUpload(''+f.id);
             },
             
             /**
@@ -824,12 +829,16 @@
      */
     function stringifySize(bytes){
         var i = -1;
-        do {
-            bytes = bytes / 1024;
+        if (bytes) {
+            do {
+                bytes = bytes / 1024;
+                i++;
+            } while (bytes > 1024);
+        } else {
             i++;
-        } while (bytes > 1024);
-
-        return Math.max(bytes, 0.01).toFixed(2) + ['KB', 'M', 'G', 'T'][i];
+            bytes = 0;
+        }
+        return bytes.toFixed(2) + ['KB', 'M', 'G', 'T'][i];
     }
     
     /**
