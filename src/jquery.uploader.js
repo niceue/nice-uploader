@@ -178,6 +178,8 @@
             this.total = isProgress ? e.total : 0;
             this.lengthComputable = isProgress ? e.lengthComputable : false;
             this.file = file;
+            // 原生HTML5事件
+            this.originalEvent = e;
         }
         //文件接口
         function _File(id, f){
@@ -396,6 +398,7 @@
                 me.loadId = file.id;
                 me.loadFile = file;
                 e = new _ProgressEvent(e, 'loadstart', file);
+                e.originalFile = me.files[file.id];
                 file._t = e.timeStamp-1;
                 file._l = 0;
                 //me.browse.style.display = 'none';
@@ -408,6 +411,7 @@
                     file = me.loadFile;
 
                 e = new _ProgressEvent(e, 'progress', file);
+                e.originalFile = me.files[file.id];
                 if (e.lengthComputable) {
                     e.speed = _getSpeed(e.loaded-file._l, e.timeStamp-file._t);
                     if (me.$queue) _showProgress.call(me,  Math.round(e.loaded * 100 / e.total).toFixed(1) + '%' );
