@@ -465,8 +465,7 @@
             },
             
             onSuccess: function(e){
-                if (!e.file) e.file = this.queue[e.id];
-                e = new _ProgressEvent(e, 'load');
+                e = new _ProgressEvent(e, 'load', this.queue[e.id]);
                 _showProgress.call(this, e.file, '100%');
                 this.options.onSuccess.call(this, e);
                 this.onComplete(e);
