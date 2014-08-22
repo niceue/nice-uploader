@@ -282,8 +282,17 @@
                         me.$queue = $('#'+ me.id + "_queue");
                     }
                 }
-                pos += 'margin-left:-'+ (width + 0^parseInt($el.css('margin-right')) + 0^parseInt($el.css('left'))) +'px;';
-                pos += 'margin-top:'+ (0^parseInt($el.css('margin-top')) + 0^parseInt($el.css('top'))) +'px;';
+                var left = $el.css('left'),
+                    top = $el.css('top'),
+                    marginLeft = $el.css('margin-left'),
+                    marginTop = $el.css('margin-top');
+
+                if ($el.css('position') === 'absolute') {
+                    pos += 'left:'+ left + ';top:'+ top + ';margin-left:' + marginLeft + ';margin-top:' + marginTop + ';';
+                } else {
+                    pos += 'margin-left:-'+ (width + (0^parseInt($el.css('margin-right'))) + 0^parseInt(left)) +'px;';
+                    pos += 'margin-top:'+ (0^parseInt(marginTop) + 0^parseInt(top)) +'px;';
+                }
 
                 me.$browseEl = $(
                     '<span class="upload-el" style="position:absolute;overflow:hidden;'+ wh + pos +'">' +
