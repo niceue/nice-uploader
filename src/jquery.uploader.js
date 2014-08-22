@@ -20,7 +20,9 @@
             fileSizeLimit: 0,                 //文件大小限制（'100kb' '5M' 等）
             fileTypeDesc: '',                 //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
             fileTypeExts: '',                 //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,png,gif'）
-            maxChunkSize: 512 * 1000,         //0.5MB
+            maxChunkSize: 512 * 1000,         //分段大小，0.5MB（暂未实现）
+            maxConnections: 2,                //最大连接数（暂未实现）
+            preview: false,                   //是否开启预览
 
             //上传事件（如果有事件参数，则包含event.file）
             onInit: noop,                     //初始化完成 ()
@@ -43,13 +45,16 @@
             onMouseClick: noop,               //点击按钮 (element)
             //添加队列事件（可自定义队列）
             onAddQueue: function(file, err){
-                var html = '<ul>\
-                    <li class="f-name" title="'+ file.name +'">'+ getShortName(file.name, 32) +'</li>\
+                var html = '<ul>';
+                if (this.options.preview) {
+                    html += '<li class="f-preview" id="'+ this.id + '_preview_' + file.id +'"></li>';
+                }
+                html += '<li class="f-name" title="'+ file.name +'">'+ getShortName(file.name, 32) +'</li>\
                     <li class="f-size">'+ stringifySize(file.size) +'</li>\
                     <li class="f-progress">'+ (err ? err.name : '') +'</li>\
                     <li class="f-operate"><a href="#" class="upload-cancel">&times;</a></li>\
                     </ul>\
-                    <div class="upload-progress"></div>';
+                    <div class="f-progress-bg"></div>';
                 return html;
             }
         },
@@ -234,12 +239,12 @@
         //显示上传进度
         function _showProgress(file, percent){
             var $queue = $('#'+ this.id +'___'+ file.id),
-                $el = $queue.find('.upload-progress');
+                $el = $queue.find('.f-progress-bg');
             $el.animate({width: percent}, 200);
             $queue.find('.f-progress').text( percent );
             if (percent === '100%') {
                 $el.delay(2000).fadeOut(800, function(){
-                    $(this).parent().remove();
+                    $queue.remove();
                 });
             }
         }
@@ -281,6 +286,7 @@
                         $el.after('<div class="upload-queue" id="'+ me.id +'_queue"></div>');
                         me.$queue = $('#'+ me.id + "_queue");
                     }
+                    if (opt.preview) me.$queue.addClass('upload-preview');
                 }
                 var left = $el.css('left'),
                     top = $el.css('top'),
@@ -373,6 +379,30 @@
                     if (this.queue[i].id === id) return true;
                 }
             },
+
+            getDataURL: function(file) {
+                var me = this;
+
+                // HTML5方式
+                if (window.File && file instanceof File) {
+                    if (window.FileReader) {
+                        var reader = new FileReader();
+                        reader.onload = function(e){
+                            file.dataURL = this.result;
+                            me.setPreview(file);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+                // flash 模式返回dataURL字符串
+                else if (file.dataURL && /^data:.*;base64/i.test(file.dataURL)) {
+                    me.setPreview(file);
+                }
+            },
+
+            setPreview: function(file) {
+                $('#'+ this.id +'_preview_'+ file.id).html('<img src="'+ file.dataURL +'">');
+            },
             
             onSelected: function(fileList){
                 var me = this,
@@ -389,6 +419,9 @@
                     var _err;
                     f = new _File(+i, file);
                     file.id = i; //flash模式自带id，html5没有id，这里直接设置id即可
+                    if (opt.preview) {
+                        me.getDataURL(file);
+                    }
                     if (me.acceptExts !== '*' && !_acceptType.call(me, file.name)) { //排除不允许的文件类型
                         me.onError( {code: 601, params: [acceptExts]}, false );
                         return;
@@ -657,6 +690,7 @@
     })();
     Uploader.flash = Uploader.extend(function(){
         var isIE = !!window.ActiveXObject,
+            isOriginalIE8 = isIE && !navigator.msDoNotTrack,    //是否是原始IE8
             PREVENT_CACHE = +new Date();
         
         //生成Flash的HTML(只有src是必传的参数)
@@ -751,6 +785,12 @@
                     };
                 if (opt.multiple) params.multiple = 1;
                 if (opt.debug) params.debug = 1;
+                if (opt.preview) {
+                    params.preview = 1;
+                    if (isOriginalIE8) {
+                        params.previewSize = 31 * 1024;
+                    }
+                }
                 if (opt.method) params.method = opt.method;
                 return _embedSWF({
                     src: opt.swf,
