@@ -208,18 +208,16 @@ package
                     var loader:Loader = new Loader();
                     loader.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void {
                         var bmd:BitmapData = Bitmap(e.target.content).bitmapData;
-                        var quality:Number = 10;
+                        var quality:Number = 30;
                         if (flashvars.previewSize) {
                             quality = Number(((flashvars.previewSize * 100) / (file.size * 5)).toFixed(1));
                         }
                         var data:ByteArray = new JPEGEncoder(quality).encode(bmd);
                         var dataURL:String = 'data:' + allowedType + '/' + ext + ';base64,' + encode(data);
-                        log(dataURL.length);
                         callJS("setPreview", {id: id, dataURL: dataURL});
                     });
                     file.addEventListener(Event.COMPLETE, function(e:Event):void {
                         if (loadState == STATE_CACHE) {
-                            log(e.target.size);
                             loader.loadBytes(e.target.data);
                         }
                     });
