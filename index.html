@@ -16,7 +16,7 @@ a:hover {text-decoration:underline;}
 <body>
     <h2>建议打开控制台查看上传过程</h2>
     <br>
-	<span style="color:red">注意：1、本示例限制了只能上传 jpg,gif,png | zip,rar 格式；2、文件大小超过1M（1024KB）则禁止上传</span>
+	<span style="color:red">注意：1、本示例限制了只能上传 jpg,jpeg,gif,png 格式；2、文件大小超过1M（1024KB）则禁止上传</span>
     <br><br>
     
 	<button type="button" id="selectFile">选择文件</button>
@@ -49,10 +49,12 @@ $(function(){
         formData: {},           //
         multiple: true,         //是否多选
         auto: false,            //是否自动上传
+		//debug:true,
+        preview: true,
         showQueue: '#queue',                        //显示队列的位置（传递jQuery选择器自定义队列显示的元素，传递true自动生成队列）
         fileSizeLimit: '1M',                        //文件大小限制（'100kb' '5M' 等）
-        fileTypeDesc: '选择图片|选择压缩文件',      //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
-        fileTypeExts: 'jpg,gif,png|zip,rar',        //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,png,gif'）
+        fileTypeDesc: '选择图片文件',      //可选择的文件的描述，用中竖线分组。此字符串出现在浏览文件对话框的文件类型下拉中
+        fileTypeExts: 'jpg,jpeg,gif,png',        //允许上传的文件类型类表，用逗号分隔多个扩展，用中竖线分组（eg: 'jpg,jpeg,gif,png | zip,rar'）
 
         /*
         // 鼠标点击触发按钮
